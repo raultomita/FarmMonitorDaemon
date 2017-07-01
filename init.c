@@ -1,11 +1,14 @@
 #include <wiringPi.h>
 #include <stdio.h>
+#include "tankLevel.h"
 
 const int ledPinPwm = 18;
 const int ledPin2 = 27;
 const int ledPin = 17;
+
 const int btnPin = 23;
 const int btnPinRising = 24;
+const int btnPin3 = 22;
 
 void buttonPushed(void){
 	digitalWrite(ledPin, HIGH);
