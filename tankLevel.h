@@ -1,1 +1,2 @@
-void registerMaxLevelReached(int (*callback)(void));
+void initializeTankLevel(void);
+int getTankLevel(void);
