@@ -80,6 +80,7 @@ void initializeTankLevel(void)
 	pullUpDnControl(btnPinDrain, PUD_UP);
 	wiringPiISR(btnPinFill, INT_EDGE_RISING, &fillTankLevel);
 	wiringPiISR(btnPinDrain, INT_EDGE_RISING, &drainTankLevel);
+	//Query tank lavel from sensor
 	displayTankLevel();
 	triggerElectroValve();
 }
