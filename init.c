@@ -1,7 +1,8 @@
 #include <wiringPi.h>
-#include <stdio.h>
+
 #include "tankLevel.h"
 #include "watering.h"
+#include "display.h"
 #include "pins.h"
 
 int ledPinTankFull = 23;
@@ -18,13 +19,13 @@ int main(void)
 	wiringPiSetupGpio();
 	initializeTankLevel();
 	initializeWateringSchedule();
-	printf("Configuration complete \n");
+	initializeDisplay();
 
 	while(1)
 	{
 		delay(1000);
 		timerCallbackWatering();
-		timerCallbackTankLevel();		
+		timerCallbackTankLevel();	
 	}
     return 0;
 }

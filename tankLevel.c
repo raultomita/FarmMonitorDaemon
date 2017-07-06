@@ -1,10 +1,13 @@
 #include <wiringPi.h>
-#include <stdio.h>
+#include "display.h"
 #include "tankLevel.h"
 #include "pins.h"
 
 volatile int tankState = 0;
-
+const int emptyCell = '_';
+const int fullCell = '+';
+char levelMessage[10] = "__________";
+ 
 void writeTankLedValues(int emptyState, int fullState){
 	digitalWrite(ledPinTankEmpty, emptyState);
 	digitalWrite(ledPinTankFull, fullState);
@@ -23,6 +26,7 @@ void displayTankLevel(void){
 	{
 		writeTankLedValues(LOW, HIGH);
 	}	
+	displayMessage(1, 7, levelMessage);
 }
 
 void triggerElectroValve(void){
@@ -40,8 +44,10 @@ void triggerElectroValve(void){
 void fillTankLevel(void){
 	if(tankState < 10)
 	{
+		
 		tankState += 1;
-		printf("Filling tank: %d\n", tankState);
+		levelMessage[tankState-1] = fullCell;		
+		
 		displayTankLevel();
 		triggerElectroValve();
 	}
@@ -49,8 +55,9 @@ void fillTankLevel(void){
 
 void drainTankLevel(void){
 	if(tankState >0 ){
+		levelMessage[tankState-1] = emptyCell;
 		tankState -= 1;
-		printf("draining tank: %d\n", tankState);
+		
 		displayTankLevel();
 		triggerElectroValve();
 	}
@@ -69,6 +76,7 @@ void initializeTankLevel(void)
 	wiringPiISR(btnPinFill, INT_EDGE_RISING, &fillTankLevel);
 	wiringPiISR(btnPinDrain, INT_EDGE_RISING, &drainTankLevel);
 	//Query tank lavel from sensor
+	displayMessage(1, 0, "Water:");
 	displayTankLevel();
 	triggerElectroValve();
 }

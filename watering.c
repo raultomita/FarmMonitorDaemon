@@ -1,5 +1,5 @@
 #include <wiringPi.h>
-#include <stdio.h>
+#include "display.h"
 #include "watering.h"
 #include "tankLevel.h"
 #include "pins.h"
@@ -15,12 +15,12 @@ void timerCallbackWatering(void)
 {
 	if(getTankLevel() == 100)
 	{
-		printf("Turn on\n");
+		//printf("Turn on\n");
 		digitalWrite(ledPinTankOutputEv, HIGH);
 	}
 	else
 	{
-		printf("Turn off\n");
+		//printf("Turn off\n");
 		digitalWrite(ledPinTankOutputEv, LOW);
 	}
 }
