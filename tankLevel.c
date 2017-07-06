@@ -1,47 +1,36 @@
 #include <wiringPi.h>
 #include <stdio.h>
 #include "tankLevel.h"
+#include "pins.h"
 
-const int ledPinTankFull = 18;
-const int ledPinTankMedium = 23;
-const int ledPinTankEmpty = 24;
-const int ledPinTankInputEv = 22;
-const int btnPinDrain = 27;
-const int btnPinFill=17;
 volatile int tankState = 0;
 
-void writeTankLedValues(int emptyState, int mediumState, int fullState){
+void writeTankLedValues(int emptyState, int fullState){
 	digitalWrite(ledPinTankEmpty, emptyState);
-	digitalWrite(ledPinTankMedium, mediumState);
 	digitalWrite(ledPinTankFull, fullState);
 }
 
-void displayTankLevel(void){
-	switch(tankState){
-		case 0: 
-			writeTankLedValues(HIGH, LOW, LOW); 
-			break;
-		case 1: 
-			writeTankLedValues(HIGH, HIGH, LOW); 
-			break;
-		case 2:
-			writeTankLedValues(LOW, HIGH, LOW); 
-			break;
-		case 3:
-			writeTankLedValues(LOW, HIGH, HIGH); 
-			break;
-		case 4:
-			writeTankLedValues(LOW, LOW, HIGH); 
-			break;
+void displayTankLevel(void){	
+	if(tankState == 0)
+	{
+		writeTankLedValues(HIGH, LOW); 
 	}
+	else if(tankState < 10)
+	{
+		writeTankLedValues(HIGH, HIGH);
+	}
+	else
+	{
+		writeTankLedValues(LOW, HIGH);
+	}	
 }
 
 void triggerElectroValve(void){
-	if(tankState <= 1)
+	if(tankState <= 3)
 	{
 		digitalWrite(ledPinTankInputEv, HIGH);
 	}
-	else if(tankState == 4)
+	else if(tankState == 10)
 	{
 		digitalWrite(ledPinTankInputEv, LOW);
 	}
@@ -49,19 +38,19 @@ void triggerElectroValve(void){
 
 //Interrupts callbacks
 void fillTankLevel(void){
-	if(tankState < 4)
+	if(tankState < 10)
 	{
 		tankState += 1;
-		printf("fill tank state is: %d\n", tankState);
+		printf("Filling tank: %d\n", tankState);
 		displayTankLevel();
 		triggerElectroValve();
 	}
 }
 
 void drainTankLevel(void){
-	if(tankState >0){
+	if(tankState >0 ){
 		tankState -= 1;
-		printf("drain tank state is: %d\n", tankState);
+		printf("draining tank: %d\n", tankState);
 		displayTankLevel();
 		triggerElectroValve();
 	}
@@ -70,8 +59,7 @@ void drainTankLevel(void){
 //Public APIs
 void initializeTankLevel(void)
 {
-	pinMode(ledPinTankEmpty, OUTPUT);
-	pinMode(ledPinTankMedium, OUTPUT);
+	pinMode(ledPinTankEmpty, OUTPUT);	
 	pinMode(ledPinTankFull, OUTPUT);
 	pinMode(ledPinTankInputEv, OUTPUT);
  	pinMode(btnPinFill, INPUT);
@@ -87,5 +75,9 @@ void initializeTankLevel(void)
 
 int getTankLevel(void)
 {
-	return tankState*25;
+	return tankState*10;
+}
+
+void timerCallbackTankLevel(void)
+{
 }
