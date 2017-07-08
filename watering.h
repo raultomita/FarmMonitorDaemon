@@ -1,3 +1,4 @@
+#include <time.h>
 void initializeWateringSchedule(void);
 
-void timerCallbackWatering(void);
+void timerCallbackWatering(struct tm * timeinfo);

@@ -1,4 +1,5 @@
 #include <wiringPi.h>
+#include <time.h>
 #include "display.h"
 #include "tankLevel.h"
 #include "pins.h"
@@ -8,35 +9,26 @@ const int emptyCell = '_';
 const int fullCell = '+';
 char levelMessage[10] = "__________";
  
-void writeTankLedValues(int emptyState, int fullState){
-	digitalWrite(ledPinTankEmpty, emptyState);
-	digitalWrite(ledPinTankFull, fullState);
-}
-
 void displayTankLevel(void){	
-	if(tankState == 0)
+	if(tankState < 10)
 	{
-		writeTankLedValues(HIGH, LOW); 
-	}
-	else if(tankState < 10)
-	{
-		writeTankLedValues(HIGH, HIGH);
+		digitalWrite(ledPinTankFull, LOW);
 	}
 	else
 	{
-		writeTankLedValues(LOW, HIGH);
+		digitalWrite(ledPinTankFull, HIGH);
 	}	
-	displayMessage(1, 7, levelMessage);
+	displayMessage(0, 7, levelMessage);
 }
 
 void triggerElectroValve(void){
 	if(tankState <= 3)
 	{
-		digitalWrite(ledPinTankInputEv, HIGH);
+		digitalWrite(commandPinTankInputEv, HIGH);
 	}
 	else if(tankState == 10)
 	{
-		digitalWrite(ledPinTankInputEv, LOW);
+		digitalWrite(commandPinTankInputEv, LOW);
 	}
 }
 
@@ -65,10 +57,10 @@ void drainTankLevel(void){
 
 //Public APIs
 void initializeTankLevel(void)
-{
-	pinMode(ledPinTankEmpty, OUTPUT);	
+{	
 	pinMode(ledPinTankFull, OUTPUT);
-	pinMode(ledPinTankInputEv, OUTPUT);
+	pinMode(ledPinTankInputEvOperation, OUTPUT);
+	pinMode(commandPinTankInputEv, OUTPUT);
  	pinMode(btnPinFill, INPUT);
  	pinMode(btnPinDrain, INPUT);
 	pullUpDnControl(btnPinFill, PUD_UP);
@@ -76,7 +68,7 @@ void initializeTankLevel(void)
 	wiringPiISR(btnPinFill, INT_EDGE_RISING, &fillTankLevel);
 	wiringPiISR(btnPinDrain, INT_EDGE_RISING, &drainTankLevel);
 	//Query tank lavel from sensor
-	displayMessage(1, 0, "Water:");
+	displayMessage(0, 0, "Water:");
 	displayTankLevel();
 	triggerElectroValve();
 }
@@ -86,6 +78,15 @@ int getTankLevel(void)
 	return tankState*10;
 }
 
-void timerCallbackTankLevel(void)
+void timerCallbackTankLevel(struct tm * timeinfo)
 {
+	int value = digitalRead(commandPinTankInputEv);
+	if(value == HIGH)
+	{	
+		digitalWrite(ledPinTankInputEvOperation, state);
+	}
+	else
+	{
+		digitalWrite(ledPinTankInputEvOperation, LOW);
+	}
 }

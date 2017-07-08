@@ -1,4 +1,5 @@
 #include <wiringPi.h>
+#include <time.h>
 #include "display.h"
 #include "watering.h"
 #include "tankLevel.h"
@@ -6,21 +7,27 @@
 
 void initializeWateringSchedule(void)
 {
-	pinMode(ledPinTankOutputEv, OUTPUT);
-	digitalWrite(ledPinTankOutputEv, LOW);
+	pinMode(commandPinTankOutputEv, OUTPUT);
+	pinMode(ledPinTankOutputEvOperation, OUTPUT);
+	digitalWrite(commandPinTankOutputEv, LOW);
 }
 
-
-void timerCallbackWatering(void)
+int hasEnoughWatterIsSoil(void)
 {
-	if(getTankLevel() == 100)
-	{
-		//printf("Turn on\n");
-		digitalWrite(ledPinTankOutputEv, HIGH);
+	//TODO: when I have a moisture sensor this method should return the actual state of the soil
+	return 0;
+}	
+
+void timerCallbackWatering(struct tm * timeinfo)
+{	
+	if(timeinfo ->tm_sec >= 15 && timeinfo -> tm_sec <=45 && !hasEnoughWatterIsSoil())
+	{		
+		digitalWrite(commandPinTankOutputEv, HIGH);		
+		digitalWrite(ledPinTankOutputEvOperation, state);
 	}
 	else
 	{
-		//printf("Turn off\n");
-		digitalWrite(ledPinTankOutputEv, LOW);
+		digitalWrite(commandPinTankOutputEv, LOW);
+		digitalWrite(ledPinTankOutputEvOperation, LOW);
 	}
 }
