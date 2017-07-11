@@ -1,0 +1,10 @@
+[Unit]
+Description=Redis Service
+After=multi-user.target
+
+[Service]
+Type=idle
+ExecStart=/home/pi/Projects/redis/src/redis-server /home/pi/Projects/redis/redis.conf
+
+[Install]
+WantedBy=multi-user.target

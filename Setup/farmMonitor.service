@@ -1,0 +1,10 @@
+[Unit]
+Description=Farm Monitor Service
+After=multi-user.target
+
+[Service]
+Type=idle
+ExecStart=/home/pi/Projects/FarmMonitorDaemon/farmMonitor
+
+[Install]
+WantedBy=multi-user.target
