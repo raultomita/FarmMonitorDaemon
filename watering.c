@@ -12,22 +12,50 @@ void initializeWateringSchedule(void)
 	digitalWrite(commandPinTankOutputEv, LOW);
 }
 
-int hasEnoughWatterIsSoil(void)
+int hasSoilEnoughWater(void)
 {
 	//TODO: when I have a moisture sensor this method should return the actual state of the soil
 	return 0;
 }	
 
+volatile int isWateringSystemOverrided = 0;
+struct tm* wateringSystemOverridedOn;
+
 void timerCallbackWatering(struct tm * timeinfo)
-{	
-	if(timeinfo ->tm_sec >= 15 && timeinfo -> tm_sec <=45 && !hasEnoughWatterIsSoil())
-	{		
-		digitalWrite(commandPinTankOutputEv, HIGH);		
-		digitalWrite(ledPinTankOutputEvOperation, state);
-	}
-	else
-	{
-		digitalWrite(commandPinTankOutputEv, LOW);
-		digitalWrite(ledPinTankOutputEvOperation, LOW);
-	}
+{		
+		if(isWateringSystemOverrided)
+		{
+			//TODO: take over control  after 12 h
+		}
+		else if(timeinfo ->tm_sec >= 15 && timeinfo -> tm_sec <=45 && !hasSoilEnoughWater())
+		{			
+			digitalWrite(commandPinTankOutputEv, HIGH);					
+		}
+		else
+		{
+			digitalWrite(commandPinTankOutputEv, LOW);			
+		}	
+		
+		if(digitalRead(commandPinTankOutputEv))
+		{
+			digitalWrite(ledPinTankOutputEvOperation, state);
+		}
+		else
+		{
+			digitalWrite(ledPinTankOutputEvOperation, LOW);
+		}
 }
+
+void triggerWatering(void)
+{	
+	time_t rawtime;
+	time ( &rawtime );
+	wateringSystemOverridedOn = localtime ( &rawtime );
+	isWateringSystemOverrided = 1;
+	
+	int currentState = digitalRead(commandPinTankOutputEv);
+	digitalWrite(commandPinTankOutputEv, !currentState);
+	digitalWrite(ledPinTankOutputEvOperation, !currentState);
+}
+
+
