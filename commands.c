@@ -15,7 +15,7 @@ void onMessage(redisAsyncContext *c, void *reply, void *privdata) {
     if (r->type == REDIS_REPLY_ARRAY) {
 		int j;
         for (j = 2; j < r->elements; j++) {
-            if(r->element[j]->str != null)
+            if(r->element[j]->str != NULL)
 			{
 				triggerWatering();
 			}
@@ -31,7 +31,6 @@ void initializeCommandHandlers(void)
     redisAsyncContext *c = redisAsyncConnect("127.0.0.1", 6379);
     if (c->err) {
         printf("error: %s\n", c->errstr);
-        return 1;
     }
 
     redisLibeventAttach(c, base);
