@@ -1,5 +1,6 @@
 #include <wiringPi.h>
 #include <time.h>
+#include <stdio.h>
 
 #include "tankLevel.h"
 #include "watering.h"
@@ -23,11 +24,14 @@ int state = LOW;
 int main(void)
 {
 	wiringPiSetupGpio();
+	
 	initializeDisplay();		
-	initializeTankLevel();
+	initializeTankLevel();	
 	initializeWateringSchedule();
 	initializeExternalHandlers();
-
+	
+	printf("ConfigurationComplete\n");
+	
 	time_t rawtime;
 	struct tm* timeinfo;
 	

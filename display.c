@@ -2,6 +2,7 @@
 
 void writeTextOnScreen(int row, int column, char* value)
 {
+	return;
 	printf("\x1B[%d;%df", row, column);
 	fflush(stdout);
 	printf(value);
@@ -10,6 +11,7 @@ void writeTextOnScreen(int row, int column, char* value)
 
 void initializeDisplay(void)
 {
+	return;
 	printf("\033[2J"); 
 	
 	writeTextOnScreen(10, 26, "------------------------");

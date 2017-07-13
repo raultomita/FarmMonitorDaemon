@@ -1,1 +1,2 @@
-gcc -Wall -o farmMonitor init.c tankLevel.c watering.c display.c commands.c -L/usr/local/lib -lwiringPi -lhiredis -levent -Wl,-rpath=/usr/local/lib
+
+gcc -Wall -o farmMonitor init.c tankLevel.c watering.c display.c external.c -L/usr/local/lib -lwiringPi -lhiredis -levent -Wl,-rpath=/usr/local/lib

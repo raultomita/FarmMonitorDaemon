@@ -23,7 +23,7 @@ void onMessage(redisAsyncContext *c, void *reply, void *privdata) {
     }
 }
 
-void initializeCommandHandlers(void)
+void initializeExternalHandlers(void)
 {
 	signal(SIGPIPE, SIG_IGN);
     struct event_base *base = event_base_new();
