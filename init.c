@@ -4,7 +4,7 @@
 #include "tankLevel.h"
 #include "watering.h"
 #include "display.h"
-#include "commands.h"
+#include "external.h"
 #include "pins.h"
 
 int ledPinTankFull = 23;
@@ -26,7 +26,7 @@ int main(void)
 	initializeDisplay();		
 	initializeTankLevel();
 	initializeWateringSchedule();
-	initializeCommandHandlers();
+	initializeExternalHandlers();
 
 	time_t rawtime;
 	struct tm* timeinfo;

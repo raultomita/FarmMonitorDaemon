@@ -7,7 +7,6 @@
 #include <hiredis/adapters/libevent.h>
 
 #include "watering.h"
-#include "external.h"
 
 void onMessage(redisAsyncContext *c, void *reply, void *privdata) {
     redisReply *r = reply;
@@ -24,7 +23,7 @@ void onMessage(redisAsyncContext *c, void *reply, void *privdata) {
     }
 }
 
-void initializeExternalHandlers(void)
+void initializeCommandHandlers(void)
 {
 	signal(SIGPIPE, SIG_IGN);
     struct event_base *base = event_base_new();
