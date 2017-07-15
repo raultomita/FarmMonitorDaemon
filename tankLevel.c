@@ -3,6 +3,7 @@
 #include "display.h"
 #include "tankLevel.h"
 #include "pins.h"
+#include "external.h"
 
 volatile int tankState = 0;
 const int emptyCell = '_';
@@ -42,6 +43,7 @@ void fillTankLevel(void){
 		
 		displayTankLevel();
 		triggerElectroValve();
+		sendNotification("some test");
 	}
 }
 

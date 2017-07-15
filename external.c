@@ -8,6 +8,9 @@
 
 #include "watering.h"
 
+redisAsyncContext *c;
+struct event_base *base;
+
 void onMessage(redisAsyncContext *c, void *reply, void *privdata) {
     redisReply *r = reply;
     if (reply == NULL) return;
@@ -23,17 +26,32 @@ void onMessage(redisAsyncContext *c, void *reply, void *privdata) {
     }
 }
 
-void initializeExternalHandlers(void)
+void initializeRedis(void)
 {
 	signal(SIGPIPE, SIG_IGN);
-    struct event_base *base = event_base_new();
+    *base = event_base_new();
 
-    redisAsyncContext *c = redisAsyncConnect("127.0.0.1", 6379);
+    *c = redisAsyncConnect("127.0.0.1", 6379);
     if (c->err) {
         printf("error: %s\n", c->errstr);
-    }
+	}
+	
+	redisLibeventAttach(c, base);
+}
 
-    redisLibeventAttach(c, base);
+void initializeExternalHandlers(void)
+{   
     redisAsyncCommand(c, onMessage, NULL, "SUBSCRIBE commands");
     event_base_dispatch(base);
+}
+
+void onNotification(redisAsyncContext *c, void *reply, void *privdata) {
+    redisReply *r = reply;
+    if (reply == NULL) return;   
+}
+
+
+void sendNotification(char* message)
+{
+	redisAsyncCommand(c, onNotification, NULL, "SET tankLevel 40"); 
 }

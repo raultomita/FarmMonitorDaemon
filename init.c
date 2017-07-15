@@ -26,6 +26,7 @@ int main(void)
 	delay(1000);
 	wiringPiSetupGpio();
 	
+	initializeRedis();
 	initializeDisplay();		
 	initializeTankLevel();	
 	initializeWateringSchedule();
