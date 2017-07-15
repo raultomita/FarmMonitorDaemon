@@ -29,9 +29,9 @@ void onMessage(redisAsyncContext *c, void *reply, void *privdata) {
 void initializeRedis(void)
 {
 	signal(SIGPIPE, SIG_IGN);
-    *base = event_base_new();
+    base = event_base_new();
 
-    *c = redisAsyncConnect("127.0.0.1", 6379);
+    c = redisAsyncConnect("127.0.0.1", 6379);
     if (c->err) {
         printf("error: %s\n", c->errstr);
 	}
@@ -46,7 +46,6 @@ void initializeExternalHandlers(void)
 }
 
 void onNotification(redisAsyncContext *c, void *reply, void *privdata) {
-    redisReply *r = reply;
     if (reply == NULL) return;   
 }
 
