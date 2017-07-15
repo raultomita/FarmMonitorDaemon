@@ -23,6 +23,7 @@ int state = LOW;
 
 int main(void)
 {
+	delay(1000);
 	wiringPiSetupGpio();
 	
 	initializeDisplay();		
