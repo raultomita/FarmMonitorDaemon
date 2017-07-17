@@ -45,12 +45,7 @@ void initializeExternalHandlers(void)
     event_base_dispatch(base);
 }
 
-void onNotification(redisAsyncContext *c, void *reply, void *privdata) {
-    if (reply == NULL) return;   
-}
-
-
 void sendNotification(char* message)
 {
-	redisAsyncCommand(c, onNotification, NULL, "SET tankLevel 40"); 
+	
 }

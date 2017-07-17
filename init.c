@@ -24,16 +24,24 @@ int state = LOW;
 int main(void)
 {
 	delay(1000);
-	wiringPiSetupGpio();
 	
-	initializeRedis();
+	//Initialize redis and subscribe to external event on separate thread
+	new thread
+	{
+		initializeRedis();
+	}
+	//wait ofor it
+	
+	//Initializes pins and main modules
+	//Write their initial state
+	wiringPiSetupGpio();
 	initializeDisplay();		
 	initializeTankLevel();	
 	initializeWateringSchedule();
-	initializeExternalHandlers();
-	
+		
 	printf("ConfigurationComplete\n");
 	
+	//do some idle work
 	time_t rawtime;
 	struct tm* timeinfo;
 	
