@@ -1,6 +1,7 @@
 #include <wiringPi.h>
 #include <time.h>
 #include <stdio.h>
+#include <pthread.h>
 
 #include "tankLevel.h"
 #include "watering.h"
