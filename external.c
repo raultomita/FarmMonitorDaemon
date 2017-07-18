@@ -3,12 +3,12 @@
 #include <string.h>
 #include <signal.h>
 #include <pthread.h>
-#include <wiringPi.h>
 #include <hiredis/hiredis.h>
 #include <hiredis/async.h>
 #include <hiredis/adapters/libevent.h>
 
 #include "watering.h"
+#include "tankLevel.h"
 
 void onRedisConnected(const redisAsyncContext *c, int status) {
     if (status != REDIS_OK) {
@@ -29,19 +29,23 @@ void onRedisDisconnected(const redisAsyncContext *c, int status) {
 void onRedisMessageReceived(redisAsyncContext *c, void *reply, void *privdata) {
     redisReply *r = reply;
     if (reply == NULL) return;
-printf("Redis: %d\n", pthread_self());
+	printf("Command: %d\n", (long)pthread_self());
     if (r->type == REDIS_REPLY_ARRAY) {
 		int j;
         for (j = 2; j < r->elements; j++) {
-            if(r->element[j]->str != NULL)
+            if(r->element[j]->str != "triggerWatering")
 			{
 				triggerWatering();
+			}
+			else if (r->element[j]->str != "triggerTankLevel")
+			{
+				triggerTankLevel();
 			}
         }
     }
 }
 
-PI_THREAD (redisCommandsThread)
+void listenForRedisCommands (void)
 {
     signal(SIGPIPE, SIG_IGN);
     struct event_base *base = event_base_new();
@@ -54,19 +58,15 @@ PI_THREAD (redisCommandsThread)
 	
 	redisLibeventAttach(c, base);
 	redisAsyncSetConnectCallback(c,onRedisConnected);
-        redisAsyncSetDisconnectCallback(c,onRedisDisconnected);
+    redisAsyncSetDisconnectCallback(c,onRedisDisconnected);
 	redisAsyncCommand(c, onRedisMessageReceived, NULL, "SUBSCRIBE commands");
-printf("T_ID: %d redis complete\n", pthread_self());
-        event_base_dispatch(base);
-return 0;
+	printf("[%d]: Redis configuration complete\n", (long)pthread_self());
+	event_base_dispatch(base);
+	pthread_exit();
 }
 
 void initializeExternalHandlers(void)
 {
-   piThreadCreate(redisCommandsThread);
-}
-
-void sendNotification(char* message)
-{
-	
+	pthread_t commandsThread;
+    piThreadCreate(&commandsThread, NULL, listenForRedisCommands, NULL);
 }

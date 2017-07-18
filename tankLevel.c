@@ -42,8 +42,7 @@ void fillTankLevel(void){
 		levelMessage[tankState-1] = fullCell;		
 		
 		displayTankLevel();
-		triggerElectroValve();
-		sendNotification("some test");
+		triggerElectroValve();		
 	}
 }
 
@@ -78,6 +77,18 @@ void initializeTankLevel(void)
 int getTankLevel(void)
 {
 	return tankState*10;
+}
+
+void triggerTankLevel(void)
+{
+	if(tankState < 10)
+	{
+		digitalWrite(commandPinTankInputEv, !digitalRead(commandPinTankInputEv));
+	}
+	else
+	{
+		digitalWrite(commandPinTankInputEv, LOW);
+	}
 }
 
 void timerCallbackTankLevel(struct tm * timeinfo)
