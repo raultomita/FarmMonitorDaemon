@@ -29,15 +29,17 @@ void onRedisDisconnected(const redisAsyncContext *c, int status) {
 void onRedisMessageReceived(redisAsyncContext *c, void *reply, void *privdata) {
     redisReply *r = reply;
     if (reply == NULL) return;
-	printf("Command: %d\n", (long)pthread_self());
+	printf("[%ld] Command received\n", (long)pthread_self());
     if (r->type == REDIS_REPLY_ARRAY) {
 		int j;
         for (j = 2; j < r->elements; j++) {
-            if(r->element[j]->str != "triggerWatering")
+            if(r->element[j]->str != NULL && 
+	       strcmp(r->element[j]->str, "triggerWatering") == 0)
 			{
 				triggerWatering();
 			}
-			else if (r->element[j]->str != "triggerTankLevel")
+		else if (r->element[j]->str != NULL &&
+			 strcmp(r->element[j]->str, "triggerTankLevel") == 0)
 			{
 				triggerTankLevel();
 			}
@@ -45,7 +47,7 @@ void onRedisMessageReceived(redisAsyncContext *c, void *reply, void *privdata) {
     }
 }
 
-void listenForRedisCommands (void)
+void * listenForRedisCommands (void * threadId)
 {
     signal(SIGPIPE, SIG_IGN);
     struct event_base *base = event_base_new();
@@ -60,13 +62,13 @@ void listenForRedisCommands (void)
 	redisAsyncSetConnectCallback(c,onRedisConnected);
     redisAsyncSetDisconnectCallback(c,onRedisDisconnected);
 	redisAsyncCommand(c, onRedisMessageReceived, NULL, "SUBSCRIBE commands");
-	printf("[%d]: Redis configuration complete\n", (long)pthread_self());
+	printf("[%ld]: Redis configuration complete\n", (long)pthread_self());
 	event_base_dispatch(base);
-	pthread_exit();
+	pthread_exit(NULL);
 }
 
 void initializeExternalHandlers(void)
 {
 	pthread_t commandsThread;
-    piThreadCreate(&commandsThread, NULL, listenForRedisCommands, NULL);
+    pthread_create(&commandsThread, NULL, listenForRedisCommands, NULL);
 }

@@ -3,7 +3,7 @@
 
 void writeTextOnScreen(int row, int column, char* value)
 {
-	printf("T_ID:%d - %s\n",pthread_self(), value);
+	printf("[%ld] %s\n",pthread_self(), value);
 	return;
 	printf("\x1B[%d;%df", row, column);
 	fflush(stdout);

@@ -33,7 +33,7 @@ int main(void)
 	initializeWateringSchedule();
 	
 	initializeExternalHandlers();	
-	printf("ConfigurationComplete %d\n", pthread_self());
+	printf("[%ld] ConfigurationComplete\n", pthread_self());
 	//void saveAndNotify(char * key, char* data)
 	//do some idle work
 	time_t rawtime;
@@ -47,7 +47,6 @@ int main(void)
 		
 		time ( &rawtime );
 		timeinfo = localtime ( &rawtime );
-				
 		
 		timerCallbackWatering(timeinfo);
 		timerCallbackTankLevel(timeinfo);	
