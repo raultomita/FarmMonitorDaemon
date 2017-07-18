@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include <wiringPi.h>
 #include <hiredis/hiredis.h>
 #include <hiredis/async.h>
 #include <hiredis/adapters/libevent.h>
@@ -39,21 +40,29 @@ void onRedisMessageReceived(redisAsyncContext *c, void *reply, void *privdata) {
     }
 }
 
-void initializeExternalHandlers(void)
+PI_THREAD (redisCommandsThread)
 {
-	signal(SIGPIPE, SIG_IGN);
+    signal(SIGPIPE, SIG_IGN);
     struct event_base *base = event_base_new();
 
     redisAsyncContext *c = redisAsyncConnect("127.0.0.1", 6379);
-    if (c->err) {
+    if (c->err) 
+    {
         printf("error: %s\n", c->errstr);
-	}
+    }
 	
 	redisLibeventAttach(c, base);
 	redisAsyncSetConnectCallback(c,onRedisConnected);
-    redisAsyncSetDisconnectCallback(c,onRedisDisconnected);
+        redisAsyncSetDisconnectCallback(c,onRedisDisconnected);
 	redisAsyncCommand(c, onRedisMessageReceived, NULL, "SUBSCRIBE commands");
-    event_base_dispatch(base);
+printf("redis complete\n");
+        event_base_dispatch(base);
+return 0;
+}
+
+void initializeExternalHandlers(void)
+{
+   piThreadCreate(redisCommandsThread);
 }
 
 void sendNotification(char* message)

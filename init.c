@@ -32,7 +32,7 @@ int main(void)
 	initializeTankLevel();	
 	initializeWateringSchedule();
 	
-	initializeRedisClient();	
+	initializeExternalHandlers();	
 	printf("ConfigurationComplete\n");
 	
 	//do some idle work
