@@ -8,10 +8,23 @@
 
 #include "watering.h"
 
-redisAsyncContext *c;
-struct event_base *base;
+void onRedisConnected(const redisAsyncContext *c, int status) {
+    if (status != REDIS_OK) {
+        printf("Error: %s\n", c->errstr);
+        return;
+    }
+    printf("Connected...\n");
+}
 
-void onMessage(redisAsyncContext *c, void *reply, void *privdata) {
+void onRedisDisconnected(const redisAsyncContext *c, int status) {
+    if (status != REDIS_OK) {
+        printf("Error: %s\n", c->errstr);
+        return;
+    }
+    printf("Disconnected...\n");
+}
+
+void onRedisMessageReceived(redisAsyncContext *c, void *reply, void *privdata) {
     redisReply *r = reply;
     if (reply == NULL) return;
 
@@ -26,22 +39,20 @@ void onMessage(redisAsyncContext *c, void *reply, void *privdata) {
     }
 }
 
-void initializeRedis(void)
+void initializeExternalHandlers(void)
 {
 	signal(SIGPIPE, SIG_IGN);
-    base = event_base_new();
+    struct event_base *base = event_base_new();
 
-    c = redisAsyncConnect("127.0.0.1", 6379);
+    redisAsyncContext *c = redisAsyncConnect("127.0.0.1", 6379);
     if (c->err) {
         printf("error: %s\n", c->errstr);
 	}
 	
 	redisLibeventAttach(c, base);
-}
-
-void initializeExternalHandlers(void)
-{   
-    redisAsyncCommand(c, onMessage, NULL, "SUBSCRIBE commands");
+	redisAsyncSetConnectCallback(c,onRedisConnected);
+    redisAsyncSetDisconnectCallback(c,onRedisDisconnected);
+	redisAsyncCommand(c, onRedisMessageReceived, NULL, "SUBSCRIBE commands");
     event_base_dispatch(base);
 }
 

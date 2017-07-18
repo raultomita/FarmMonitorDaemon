@@ -2,6 +2,7 @@
 
 void writeTextOnScreen(int row, int column, char* value)
 {
+	printf("%s\n", value);
 	return;
 	printf("\x1B[%d;%df", row, column);
 	fflush(stdout);
