@@ -1,7 +1,7 @@
 #include <wiringPi.h>
 #include <time.h>
 #include <stdio.h>
-
+#include <pthread.h>
 #include "tankLevel.h"
 #include "watering.h"
 #include "display.h"
@@ -33,7 +33,7 @@ int main(void)
 	initializeWateringSchedule();
 	
 	initializeExternalHandlers();	
-	printf("ConfigurationComplete\n");
+	printf("ConfigurationComplete %d\n", pthread_self());
 	
 	//do some idle work
 	time_t rawtime;
@@ -48,7 +48,6 @@ int main(void)
 		time ( &rawtime );
 		timeinfo = localtime ( &rawtime );
 				
-		displayMessage(3, 0, asctime(timeinfo)); 
 		
 		timerCallbackWatering(timeinfo);
 		timerCallbackTankLevel(timeinfo);	

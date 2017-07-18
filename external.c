@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include <pthread.h>
 #include <wiringPi.h>
 #include <hiredis/hiredis.h>
 #include <hiredis/async.h>
@@ -28,7 +29,7 @@ void onRedisDisconnected(const redisAsyncContext *c, int status) {
 void onRedisMessageReceived(redisAsyncContext *c, void *reply, void *privdata) {
     redisReply *r = reply;
     if (reply == NULL) return;
-
+printf("Redis: %d\n", pthread_self());
     if (r->type == REDIS_REPLY_ARRAY) {
 		int j;
         for (j = 2; j < r->elements; j++) {
@@ -55,7 +56,7 @@ PI_THREAD (redisCommandsThread)
 	redisAsyncSetConnectCallback(c,onRedisConnected);
         redisAsyncSetDisconnectCallback(c,onRedisDisconnected);
 	redisAsyncCommand(c, onRedisMessageReceived, NULL, "SUBSCRIBE commands");
-printf("redis complete\n");
+printf("T_ID: %d redis complete\n", pthread_self());
         event_base_dispatch(base);
 return 0;
 }
