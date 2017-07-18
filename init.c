@@ -6,6 +6,7 @@
 #include "watering.h"
 #include "display.h"
 #include "external.h"
+#include "notification.h"
 #include "pins.h"
 
 int ledPinTankFull = 23;
@@ -18,6 +19,9 @@ int ledPinTankOutputEvOperation = 25;
 
 int btnPinDrain = 22;
 int btnPinFill = 27;
+
+pthread_cond_t notificationCond = PTHREAD_COND_INITIALIZER;
+pthread_mutex_t notificationMutex = PTHREAD_MUTEX_INITIALIZER;
 
 int state = LOW;
 
@@ -33,6 +37,7 @@ int main(void)
 	initializeWateringSchedule();
 	
 	initializeExternalHandlers();	
+	initializeNotification();
 	printf("[%ld] ConfigurationComplete\n", pthread_self());
 	//void saveAndNotify(char * key, char* data)
 	//do some idle work

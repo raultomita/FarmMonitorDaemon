@@ -1,3 +1,5 @@
+#include <pthread.h>
+
 extern int ledPinTankFull;
 
 extern int commandPinTankInputEv;
@@ -10,3 +12,6 @@ extern int btnPinDrain;
 extern int btnPinFill;
 
 extern int state;
+
+extern pthread_cond_t notificationCond;
+extern pthread_mutex_t notificationMutex;
