@@ -1,5 +1,7 @@
 #include <wiringPi.h>
 #include <time.h>
+#include <stdio.h>
+
 #include "display.h"
 #include "tankLevel.h"
 #include "pins.h"
@@ -10,6 +12,16 @@ const int emptyCell = '_';
 const int fullCell = '+';
 char levelMessage[10] = "__________";
  
+void sendTankLevelNotification(void)
+{
+	char * state;
+	sprintf(state, 
+		"{ id: \"tankLevel\", type: \"tankLevel\", timeStamp:\"TBD\", level: \"%d\", inputState: \"%d\" }", 
+		tankState, 
+		digitalRead(commandPinTankInputEv));
+	saveAndNotify("tankLevel", state);
+}
+
 void displayTankLevel(void){	
 	if(tankState < 10)
 	{
@@ -42,8 +54,8 @@ void fillTankLevel(void){
 		levelMessage[tankState-1] = fullCell;		
 		
 		displayTankLevel();
-		triggerElectroValve();		
-		saveAndNotify("","");
+		triggerElectroValve();
+		sendTankLevelNotification();
 	}
 }
 
@@ -54,6 +66,7 @@ void drainTankLevel(void){
 		
 		displayTankLevel();
 		triggerElectroValve();
+		sendTankLevelNotification();
 	}
 }
 
@@ -90,6 +103,8 @@ void triggerTankLevel(void)
 	{
 		digitalWrite(commandPinTankInputEv, LOW);
 	}
+
+	sendTankLevelNotification();
 }
 
 void timerCallbackTankLevel(struct tm * timeinfo)

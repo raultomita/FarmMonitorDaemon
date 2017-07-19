@@ -12,15 +12,38 @@ char * key4save;
 char * value4save;
 void * listenForNotifications(void * threadId)
 {
-	printf("[%ld] Listening fo notifications\n", (long)pthread_self());
-	pthread_mutex_lock(&notificationMutex);
-	while(1)
-	{
-		pthread_cond_wait(&notificationCond, &notificationMutex);
-		
-		printf("[%ld] Notification Sent\n", (long)pthread_self());
+	redisContext *c = redisConnect("127.0.0.1", 6379);
+	if (c == NULL || c->err) {
+		if (c) 
+		{
+			printf("Error: %s\n", c->errstr);
+			// handle error
+		} 
+		else 
+		{
+			printf("Can't allocate redis context\n");
+		}
 	}
-	pthread_mutex_unlock(&notificationMutex);
+	else
+	{
+		printf("[%ld] Listening fo notifications\n", (long)pthread_self());
+		pthread_mutex_lock(&notificationMutex);
+		while(1)
+		{
+			pthread_cond_wait(&notificationCond, &notificationMutex);
+
+			redisReply *reply;
+			reply = redisCommand(context, "HSET devices %s \"%s\"", key4save, value4Save);
+			freeReplyObject(reply);
+			reply = redisCommand(context, "PUBLISH notification ", value4save);
+			freeReplyObject(reply);
+
+			printf("[%ld] Notification Sent\n", (long)pthread_self());
+		}
+		pthread_mutex_unlock(&notificationMutex);
+	}
+
+	redisFree(redisConnect);
 	pthread_exit(NULL);
 }
 
