@@ -32,11 +32,13 @@ void initializeNotification(void)
 
 void saveAndNotify(char * key, char * data)
 {
+	printf("[%ld] Request notification\n", (long)pthread_self());
 	pthread_mutex_lock(&notificationMutex);
 	
 	key4save = key;
 	value4save = data;
 	
 	pthread_cond_signal(&notificationCond);
+	printf("[%ld] End request notification\n", (long)pthread_self());
 	pthread_mutex_unlock(&notificationMutex);
 }

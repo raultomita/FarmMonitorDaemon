@@ -40,7 +40,7 @@ int main(void)
 	initializeExternalHandlers();	
 	initializeNotification();
 	printf("[%ld] ConfigurationComplete\n", pthread_self());
-	//void saveAndNotify(char * key, char* data)
+	
 	//do some idle work
 	time_t rawtime;
 	struct tm* timeinfo;
