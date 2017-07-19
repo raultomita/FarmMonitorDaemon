@@ -7,6 +7,7 @@
 #include "watering.h"
 #include "display.h"
 #include "external.h"
+#include "notification.h"
 #include "pins.h"
 
 int ledPinTankFull = 23;
@@ -20,28 +21,26 @@ int ledPinTankOutputEvOperation = 25;
 int btnPinDrain = 22;
 int btnPinFill = 27;
 
+pthread_cond_t notificationCond = PTHREAD_COND_INITIALIZER;
+pthread_mutex_t notificationMutex = PTHREAD_MUTEX_INITIALIZER;
+
 int state = LOW;
 
 int main(void)
 {
 	delay(1000);
-	
-	//Initialize redis and subscribe to external event on separate thread
-	new thread
-	{
-		initializeRedis();
-	}
-	//wait ofor it
-	
+
 	//Initializes pins and main modules
-	//Write their initial state
+	//Don't write their initial state
 	wiringPiSetupGpio();
 	initializeDisplay();		
 	initializeTankLevel();	
 	initializeWateringSchedule();
-		
-	printf("ConfigurationComplete\n");
 	
+	initializeExternalHandlers();	
+	initializeNotification();
+	printf("[%ld] ConfigurationComplete\n", pthread_self());
+	//void saveAndNotify(char * key, char* data)
 	//do some idle work
 	time_t rawtime;
 	struct tm* timeinfo;
@@ -54,8 +53,6 @@ int main(void)
 		
 		time ( &rawtime );
 		timeinfo = localtime ( &rawtime );
-				
-		displayMessage(3, 0, asctime(timeinfo)); 
 		
 		timerCallbackWatering(timeinfo);
 		timerCallbackTankLevel(timeinfo);	

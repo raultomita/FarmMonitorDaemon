@@ -2,50 +2,73 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include <pthread.h>
 #include <hiredis/hiredis.h>
 #include <hiredis/async.h>
 #include <hiredis/adapters/libevent.h>
 
 #include "watering.h"
+#include "tankLevel.h"
 
-redisAsyncContext *c;
-struct event_base *base;
+void onRedisConnected(const redisAsyncContext *c, int status) {
+    if (status != REDIS_OK) {
+        printf("Error: %s\n", c->errstr);
+        return;
+    }
+    printf("Connected...\n");
+}
 
-void onMessage(redisAsyncContext *c, void *reply, void *privdata) {
+void onRedisDisconnected(const redisAsyncContext *c, int status) {
+    if (status != REDIS_OK) {
+        printf("Error: %s\n", c->errstr);
+        return;
+    }
+    printf("Disconnected...\n");
+}
+
+void onRedisMessageReceived(redisAsyncContext *c, void *reply, void *privdata) {
     redisReply *r = reply;
     if (reply == NULL) return;
-
+	printf("[%ld] Command received\n", (long)pthread_self());
     if (r->type == REDIS_REPLY_ARRAY) {
 		int j;
         for (j = 2; j < r->elements; j++) {
-            if(r->element[j]->str != NULL)
+            if(r->element[j]->str != NULL && 
+	       strcmp(r->element[j]->str, "triggerWatering") == 0)
 			{
 				triggerWatering();
+			}
+		else if (r->element[j]->str != NULL &&
+			 strcmp(r->element[j]->str, "triggerTankLevel") == 0)
+			{
+				triggerTankLevel();
 			}
         }
     }
 }
 
-void initializeRedis(void)
+void * listenForRedisCommands (void * threadId)
 {
-	signal(SIGPIPE, SIG_IGN);
-    base = event_base_new();
+    signal(SIGPIPE, SIG_IGN);
+    struct event_base *base = event_base_new();
 
-    c = redisAsyncConnect("127.0.0.1", 6379);
-    if (c->err) {
+    redisAsyncContext *c = redisAsyncConnect("127.0.0.1", 6379);
+    if (c->err) 
+    {
         printf("error: %s\n", c->errstr);
-	}
+    }
 	
 	redisLibeventAttach(c, base);
+	redisAsyncSetConnectCallback(c,onRedisConnected);
+    redisAsyncSetDisconnectCallback(c,onRedisDisconnected);
+	redisAsyncCommand(c, onRedisMessageReceived, NULL, "SUBSCRIBE commands");
+	printf("[%ld]: Redis configuration complete\n", (long)pthread_self());
+	event_base_dispatch(base);
+	pthread_exit(NULL);
 }
 
 void initializeExternalHandlers(void)
-{   
-    redisAsyncCommand(c, onMessage, NULL, "SUBSCRIBE commands");
-    event_base_dispatch(base);
-}
-
-void sendNotification(char* message)
 {
-	
+	pthread_t commandsThread;
+    pthread_create(&commandsThread, NULL, listenForRedisCommands, NULL);
 }

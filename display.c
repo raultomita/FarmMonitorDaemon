@@ -1,7 +1,9 @@
 #include <stdio.h>
+#include <pthread.h>
 
 void writeTextOnScreen(int row, int column, char* value)
 {
+	printf("[%ld] %s\n",pthread_self(), value);
 	return;
 	printf("\x1B[%d;%df", row, column);
 	fflush(stdout);

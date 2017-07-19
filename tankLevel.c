@@ -3,7 +3,7 @@
 #include "display.h"
 #include "tankLevel.h"
 #include "pins.h"
-#include "external.h"
+#include "notification.h"
 
 volatile int tankState = 0;
 const int emptyCell = '_';
@@ -42,8 +42,8 @@ void fillTankLevel(void){
 		levelMessage[tankState-1] = fullCell;		
 		
 		displayTankLevel();
-		triggerElectroValve();
-		sendNotification("some test");
+		triggerElectroValve();		
+		saveAndNotify("","");
 	}
 }
 
@@ -78,6 +78,18 @@ void initializeTankLevel(void)
 int getTankLevel(void)
 {
 	return tankState*10;
+}
+
+void triggerTankLevel(void)
+{
+	if(tankState < 10)
+	{
+		digitalWrite(commandPinTankInputEv, !digitalRead(commandPinTankInputEv));
+	}
+	else
+	{
+		digitalWrite(commandPinTankInputEv, LOW);
+	}
 }
 
 void timerCallbackTankLevel(struct tm * timeinfo)
