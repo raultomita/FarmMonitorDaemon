@@ -1,6 +1,8 @@
 #include <wiringPi.h>
 #include <time.h>
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 #include "display.h"
 #include "watering.h"
@@ -8,12 +10,15 @@
 #include "notification.h"
 #include "pins.h"
 
+const char * wateringStateJsonFormat = 
+ "{ id: 'watering', type: 'watering', timeStamp:'TBD', state: '%d' }";
+
 void sendWateringNotification(void)
 {
-	char * state;
-	sprintf(state, "{ id: \"watering\", type: \"watering\", timeStamp:\"TBD\", inputState: \"%d\" }", 
+	char *json=(char*)malloc(strlen(wateringStateJsonFormat) * sizeof(char));
+	sprintf(json, wateringStateJsonFormat,
 		digitalRead(commandPinTankOutputEv));
-	saveAndNotify("watering", state);
+	saveAndNotify("watering", json);
 }
 
 void initializeWateringSchedule(void)
@@ -34,21 +39,21 @@ struct tm* wateringSystemOverridedOn;
 
 void timerCallbackWatering(struct tm * timeinfo)
 {	
-	int state = digitalRead(commandPinTankOutputEv);
+	int wateringState =digitalRead(commandPinTankOutputEv);
 	if(isWateringSystemOverrided)
 	{
 		//TODO: take over control  after 12 h
 	}
 	else if(timeinfo ->tm_sec >= 15 && timeinfo -> tm_sec <=45 && !hasSoilEnoughWater())
 	{			
-		state = HIGH;					
+		wateringState = HIGH;					
 	}
 	else
 	{
-		state = LOW;			
+		wateringState = LOW;			
 	}	
-	if(state != digitalRead(commandPinTankOutputEv)){
-		digitalWrite(commandPinTankOutputEv, state);
+	if(wateringState != digitalRead(commandPinTankOutputEv)){
+		digitalWrite(commandPinTankOutputEv, wateringState);
 		sendWateringNotification();
 	}
 	

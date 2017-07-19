@@ -38,6 +38,7 @@ int main(void)
 	initializeWateringSchedule();
 	
 	initializeExternalHandlers();	
+	delay(100);
 	initializeNotification();
 	printf("[%ld] ConfigurationComplete\n", pthread_self());
 	

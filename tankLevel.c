@@ -1,25 +1,30 @@
 #include <wiringPi.h>
 #include <time.h>
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 #include "display.h"
 #include "tankLevel.h"
 #include "pins.h"
 #include "notification.h"
 
+int tankLevelInitialized = 0;
 volatile int tankState = 0;
 const int emptyCell = '_';
 const int fullCell = '+';
 char levelMessage[10] = "__________";
+const char * tankLevelJsonFormat=
+"{ id: 'tankLevel', type: 'tankLevel', timeStamp:'TBD', level: '%d', inputState: '%d' }";
  
 void sendTankLevelNotification(void)
 {
-	char * state;
-	sprintf(state, 
-		"{ id: \"tankLevel\", type: \"tankLevel\", timeStamp:\"TBD\", level: \"%d\", inputState: \"%d\" }", 
+	char * json = (char*)malloc(strlen(tankLevelJsonFormat) * sizeof(char));
+	sprintf(json, 
+		tankLevelJsonFormat,
 		tankState, 
 		digitalRead(commandPinTankInputEv));
-	saveAndNotify("tankLevel", state);
+	saveAndNotify("tankLevel", json);
 }
 
 void displayTankLevel(void){	
@@ -109,6 +114,12 @@ void triggerTankLevel(void)
 
 void timerCallbackTankLevel(struct tm * timeinfo)
 {
+	if(!tankLevelInitialized)
+	{
+		sendTankLevelNotification();
+		tankLevelInitialized = 1;
+	}
+
 	int value = digitalRead(commandPinTankInputEv);
 	if(value == HIGH)
 	{	
