@@ -15,7 +15,7 @@ const int emptyCell = '_';
 const int fullCell = '+';
 char levelMessage[10] = "__________";
 const char *tankLevelJsonFormat =
-	"{ \"id\": \"tankLevel1\", \"type\": \"tankLevel\", \"timeStamp\": \"%s`\", \"level\": \"%d\", \"inputState\": \"%d\" }";
+	"{ \"id\": \"tankLevel1\", \"type\": \"tankLevel\", \"timeStamp\": \"%s\", \"level\": \"%d\", \"inputState\": \"%d\" }";
 
 void sendTankLevelNotification(void)
 {
