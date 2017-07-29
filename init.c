@@ -8,7 +8,7 @@
 #include "display.h"
 #include "external.h"
 #include "notification.h"
-#include "pins.h"
+#include "main.h"
 
 int ledPinTankFull = 23;
 
@@ -25,8 +25,19 @@ pthread_cond_t notificationCond = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t notificationMutex = PTHREAD_MUTEX_INITIALIZER;
 
 int state = LOW;
-struct tm* timeinfo = NULL;
-   
+
+char *getCurrentTimeInfo(void)
+{
+	time_t rawTime;
+	struct *tm timeInfo;
+	time(&rawtime);
+	timeinfo = localtime(&rawtime);
+
+	char *timeString = (char *)malloc(18 * sizeof(char));
+	strftime(timeString, sizeof(timeString), "%x %X", timeinfo);
+	return timeString;
+}
+
 int main(void)
 {
 	delay(1000);
@@ -34,29 +45,30 @@ int main(void)
 	//Initializes pins and main modules
 	//Don't write their initial state
 	wiringPiSetupGpio();
-	initializeDisplay();		
-	initializeTankLevel();	
+	initializeDisplay();
+	initializeTankLevel();
 	initializeWateringSchedule();
-	
-	initializeExternalHandlers();	
+
+	initializeExternalHandlers();
 	delay(100);
 	initializeNotification();
 	printf("[%ld] ConfigurationComplete\n", pthread_self());
-	
+
 	//do some idle work
 	time_t rawtime;
+	struct *tm timeInfo;
 	
-	while(1)
+	while (1)
 	{
 		state = !state;
-		
-		time ( &rawtime );
-		timeinfo = localtime ( &rawtime );
-		
+
+		time(&rawtime);
+		timeinfo = localtime(&rawtime);
+
 		timerCallbackWatering(timeinfo);
-		timerCallbackTankLevel(timeinfo);	
+		timerCallbackTankLevel(timeinfo);
 
 		delay(1000);
 	}
-    return 0;
+	return 0;
 }

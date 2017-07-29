@@ -6,7 +6,7 @@
 
 #include "display.h"
 #include "tankLevel.h"
-#include "pins.h"
+#include "main.h"
 #include "notification.h"
 
 int tankLevelInitialized = 0;
@@ -19,8 +19,7 @@ const char * tankLevelJsonFormat=
  
 void sendTankLevelNotification(void)
 {
-	char * timeString = (char*)malloc(18 * sizeof(char));
-	strftime(timeString, sizeof(timeString), "%x %X", timeinfo);
+	char * timeString = getCurrentTimeInfo();
 
 	printf("%s\n", timeString);
 

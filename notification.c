@@ -7,7 +7,8 @@
 #include <hiredis/async.h>
 #include <hiredis/adapters/libevent.h>
 
-#include "pins.h"
+#include "main.h"
+
 char * key4save;
 char * value4save;
 void * listenForNotifications(void * threadId)

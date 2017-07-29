@@ -1,5 +1,4 @@
 #include <pthread.h>
-#include <time.h>
 
 extern int ledPinTankFull;
 
@@ -13,7 +12,8 @@ extern int btnPinDrain;
 extern int btnPinFill;
 
 extern int state;
-extern struct tm* timeinfo;
+
+char * getCurrentTimeInfo(void);
 
 extern pthread_cond_t notificationCond;
 extern pthread_mutex_t notificationMutex;

@@ -8,7 +8,7 @@
 #include "watering.h"
 #include "tankLevel.h"
 #include "notification.h"
-#include "pins.h"
+#include "main.h"
 
 const char * wateringStateJsonFormat = 
  "{ \"id\": \"watering1\", \"type\": \"watering\", \"timeStamp\":\"%s\", \"state\": \"%d\" }";
