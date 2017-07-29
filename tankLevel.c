@@ -19,7 +19,8 @@ const char * tankLevelJsonFormat=
  
 void sendTankLevelNotification(void)
 {
-	char * timeString = getCurrentTimeInfo();
+	char timeString[18];
+	getCurrentTimeInfo(timeString, sizeof(timeString));
 
 	printf("%s\n", timeString);
 

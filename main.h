@@ -13,7 +13,7 @@ extern int btnPinFill;
 
 extern int state;
 
-char * getCurrentTimeInfo(void);
+void getCurrentTimeInfo(char * timeString, int bufferSize);
 
 extern pthread_cond_t notificationCond;
 extern pthread_mutex_t notificationMutex;
