@@ -25,7 +25,8 @@ pthread_cond_t notificationCond = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t notificationMutex = PTHREAD_MUTEX_INITIALIZER;
 
 int state = LOW;
-
+struct tm* timeinfo = NULL;
+   
 int main(void)
 {
 	delay(1000);
@@ -44,12 +45,9 @@ int main(void)
 	
 	//do some idle work
 	time_t rawtime;
-	struct tm* timeinfo;
 	
 	while(1)
 	{
-		delay(1000);
-		
 		state = !state;
 		
 		time ( &rawtime );
@@ -57,6 +55,8 @@ int main(void)
 		
 		timerCallbackWatering(timeinfo);
 		timerCallbackTankLevel(timeinfo);	
+
+		delay(1000);
 	}
     return 0;
 }

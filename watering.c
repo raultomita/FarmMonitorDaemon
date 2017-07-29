@@ -11,12 +11,14 @@
 #include "pins.h"
 
 const char * wateringStateJsonFormat = 
- "{ id: 'watering', type: 'watering', timeStamp:'TBD', state: '%d' }";
+ "{ \"id\": \"watering1\", \"type\": \"watering\", \"timeStamp\":\"%s\", \"state\": \"%d\" }";
+
 
 void sendWateringNotification(void)
 {
 	char *json=(char*)malloc(strlen(wateringStateJsonFormat) * sizeof(char));
 	sprintf(json, wateringStateJsonFormat,
+		"",
 		digitalRead(commandPinTankOutputEv));
 	saveAndNotify("watering", json);
 }

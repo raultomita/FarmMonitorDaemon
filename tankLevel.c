@@ -15,13 +15,19 @@ const int emptyCell = '_';
 const int fullCell = '+';
 char levelMessage[10] = "__________";
 const char * tankLevelJsonFormat=
-"{ id: 'tankLevel', type: 'tankLevel', timeStamp:'TBD', level: '%d', inputState: '%d' }";
+"{ \"id\": \"tankLevel1\", \"type\": \"tankLevel\", \"timeStamp\": \"%s`\", \"level\": \"%d\", \"inputState\": \"%d\" }";
  
 void sendTankLevelNotification(void)
 {
-	char * json = (char*)malloc(strlen(tankLevelJsonFormat) * sizeof(char));
+	char * timeString = (char*)malloc(18 * sizeof(char));
+	strftime(timeString, sizeof(timeString), "%x %X", timeinfo);
+
+	printf("%s\n", timeString);
+
+	char * json = (char*)malloc((strlen(tankLevelJsonFormat) + strlen(timeString)) * sizeof(char));
 	sprintf(json, 
 		tankLevelJsonFormat,
+		timeString,
 		tankState, 
 		digitalRead(commandPinTankInputEv));
 	saveAndNotify("tankLevel", json);
