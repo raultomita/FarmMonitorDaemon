@@ -26,10 +26,10 @@ pthread_mutex_t notificationMutex = PTHREAD_MUTEX_INITIALIZER;
 
 int state = LOW;
 
-void getCurrentTimeInfo(char * timeString, int bufferSize)
+void getCurrentTimeInfo(char *timeString, int bufferSize)
 {
 	time_t rawTime;
-	struct tm* timeInfo;
+	struct tm *timeInfo;
 	time(&rawTime);
 	timeInfo = localtime(&rawTime);
 	strftime(timeString, bufferSize, "%x %X", timeInfo);
@@ -54,8 +54,8 @@ int main(void)
 
 	//do some idle work
 	time_t rawtime;
-	struct tm* timeInfo;
-	
+	struct tm *timeInfo;
+
 	while (1)
 	{
 		state = !state;

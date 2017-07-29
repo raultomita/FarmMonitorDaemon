@@ -9,18 +9,19 @@
 
 #include "main.h"
 
-char * key4save;
-char * value4save;
-void * listenForNotifications(void * threadId)
+char *key4save;
+char *value4save;
+void *listenForNotifications(void *threadId)
 {
 	redisContext *c = redisConnect("127.0.0.1", 6379);
-	if (c == NULL || c->err) {
-		if (c) 
+	if (c == NULL || c->err)
+	{
+		if (c)
 		{
 			printf("Error: %s\n", c->errstr);
 			// handle error
-		} 
-		else 
+		}
+		else
 		{
 			printf("Can't allocate redis context\n");
 		}
@@ -29,7 +30,7 @@ void * listenForNotifications(void * threadId)
 	{
 		printf("[%ld] Listening fo notifications\n", (long)pthread_self());
 		pthread_mutex_lock(&notificationMutex);
-		while(1)
+		while (1)
 		{
 			pthread_cond_wait(&notificationCond, &notificationMutex);
 
@@ -51,17 +52,17 @@ void * listenForNotifications(void * threadId)
 void initializeNotification(void)
 {
 	pthread_t threadId;
-	pthread_create(&threadId, NULL, listenForNotifications, NULL);	
+	pthread_create(&threadId, NULL, listenForNotifications, NULL);
 }
 
-void saveAndNotify(char * key, char * data)
+void saveAndNotify(char *key, char *data)
 {
 	printf("[%ld] Request notification\n", (long)pthread_self());
 	pthread_mutex_lock(&notificationMutex);
-	
+
 	key4save = key;
 	value4save = data;
-	
+
 	pthread_cond_signal(&notificationCond);
 	printf("[%ld] End request notification\n", (long)pthread_self());
 	pthread_mutex_unlock(&notificationMutex);

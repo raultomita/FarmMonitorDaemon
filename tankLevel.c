@@ -14,9 +14,9 @@ volatile int tankState = 0;
 const int emptyCell = '_';
 const int fullCell = '+';
 char levelMessage[10] = "__________";
-const char * tankLevelJsonFormat=
-"{ \"id\": \"tankLevel1\", \"type\": \"tankLevel\", \"timeStamp\": \"%s`\", \"level\": \"%d\", \"inputState\": \"%d\" }";
- 
+const char *tankLevelJsonFormat =
+	"{ \"id\": \"tankLevel1\", \"type\": \"tankLevel\", \"timeStamp\": \"%s`\", \"level\": \"%d\", \"inputState\": \"%d\" }";
+
 void sendTankLevelNotification(void)
 {
 	char timeString[18];
@@ -24,57 +24,62 @@ void sendTankLevelNotification(void)
 
 	printf("%s\n", timeString);
 
-	char * json = (char*)malloc((strlen(tankLevelJsonFormat) + strlen(timeString)) * sizeof(char));
-	sprintf(json, 
-		tankLevelJsonFormat,
-		timeString,
-		tankState, 
-		digitalRead(commandPinTankInputEv));
+	char *json = (char *)malloc((strlen(tankLevelJsonFormat) + strlen(timeString)) * sizeof(char));
+	sprintf(json,
+			tankLevelJsonFormat,
+			timeString,
+			tankState,
+			digitalRead(commandPinTankInputEv));
 	saveAndNotify("tankLevel", json);
 }
 
-void displayTankLevel(void){	
-	if(tankState < 10)
+void displayTankLevel(void)
+{
+	if (tankState < 10)
 	{
 		digitalWrite(ledPinTankFull, LOW);
 	}
 	else
 	{
 		digitalWrite(ledPinTankFull, HIGH);
-	}	
+	}
 	displayMessage(0, 7, levelMessage);
 }
 
-void triggerElectroValve(void){
-	if(tankState <= 3)
+void triggerElectroValve(void)
+{
+	if (tankState <= 3)
 	{
 		digitalWrite(commandPinTankInputEv, HIGH);
 	}
-	else if(tankState == 10)
+	else if (tankState == 10)
 	{
 		digitalWrite(commandPinTankInputEv, LOW);
 	}
 }
 
 //Interrupts callbacks
-void fillTankLevel(void){
-	if(tankState < 10)
+void fillTankLevel(void)
+{
+	if (tankState < 10)
 	{
-		
+
 		tankState += 1;
-		levelMessage[tankState-1] = fullCell;		
-		
+		levelMessage[tankState - 1] = fullCell;
+
 		displayTankLevel();
 		triggerElectroValve();
 		sendTankLevelNotification();
 	}
 }
 
-void drainTankLevel(void){
-	if(tankState >0 ){
-		levelMessage[tankState-1] = emptyCell;
+void drainTankLevel(void)
+{
+	if (tankState > 0)
+	{
+		levelMessage[tankState - 1] = emptyCell;
 		tankState -= 1;
-		
+
 		displayTankLevel();
 		triggerElectroValve();
 		sendTankLevelNotification();
@@ -83,12 +88,12 @@ void drainTankLevel(void){
 
 //Public APIs
 void initializeTankLevel(void)
-{	
+{
 	pinMode(ledPinTankFull, OUTPUT);
 	pinMode(ledPinTankInputEvOperation, OUTPUT);
 	pinMode(commandPinTankInputEv, OUTPUT);
- 	pinMode(btnPinFill, INPUT);
- 	pinMode(btnPinDrain, INPUT);
+	pinMode(btnPinFill, INPUT);
+	pinMode(btnPinDrain, INPUT);
 	pullUpDnControl(btnPinFill, PUD_UP);
 	pullUpDnControl(btnPinDrain, PUD_UP);
 	wiringPiISR(btnPinFill, INT_EDGE_RISING, &fillTankLevel);
@@ -101,12 +106,12 @@ void initializeTankLevel(void)
 
 int getTankLevel(void)
 {
-	return tankState*10;
+	return tankState * 10;
 }
 
 void triggerTankLevel(void)
 {
-	if(tankState < 10)
+	if (tankState < 10)
 	{
 		digitalWrite(commandPinTankInputEv, !digitalRead(commandPinTankInputEv));
 	}
@@ -118,17 +123,17 @@ void triggerTankLevel(void)
 	sendTankLevelNotification();
 }
 
-void timerCallbackTankLevel(struct tm * timeinfo)
+void timerCallbackTankLevel(struct tm *timeinfo)
 {
-	if(!tankLevelInitialized)
+	if (!tankLevelInitialized)
 	{
 		sendTankLevelNotification();
 		tankLevelInitialized = 1;
 	}
 
 	int value = digitalRead(commandPinTankInputEv);
-	if(value == HIGH)
-	{	
+	if (value == HIGH)
+	{
 		digitalWrite(ledPinTankInputEvOperation, state);
 	}
 	else
