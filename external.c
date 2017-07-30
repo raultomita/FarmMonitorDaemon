@@ -42,12 +42,12 @@ void onRedisMessageReceived(redisAsyncContext *c, void *reply, void *privdata)
         for (j = 2; j < r->elements; j++)
         {
             if (r->element[j]->str != NULL &&
-                strcmp(r->element[j]->str, "watering") == 0)
+                strcmp(r->element[j]->str, "watering1") == 0)
             {
                 triggerWatering();
             }
             else if (r->element[j]->str != NULL &&
-                     strcmp(r->element[j]->str, "tankLevel") == 0)
+                     strcmp(r->element[j]->str, "tankLevel1") == 0)
             {
                 triggerTankLevel();
             }
