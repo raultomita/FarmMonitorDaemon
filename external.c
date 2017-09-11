@@ -9,6 +9,7 @@
 
 #include "watering.h"
 #include "tankLevel.h"
+#include "switch.h"
 
 void onRedisConnected(const redisAsyncContext *c, int status)
 {
@@ -51,7 +52,12 @@ void onRedisMessageReceived(redisAsyncContext *c, void *reply, void *privdata)
             {
                 triggerTankLevel();
             }
+	    else if (r->element[j]->str != NULL && 
+		     strcmp(r->element[j]->str, "switch") == 0)
+   	{
+ toggleSwitch(2);
         }
+}
     }
 }
 

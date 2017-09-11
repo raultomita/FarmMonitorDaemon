@@ -8,10 +8,11 @@
 #include "notification.h"
 
 const char *switchJsonFormat =
-	"{ \"id\": \"switch%s\", \"type\": \"switch\", \"timeStamp\": \"%s\", \"state\": \"%d\" }";
+	"{ \"id\": \"switch%d\", \"type\": \"switch\", \"timeStamp\": \"%s\", \"state\": \"%d\" }";
 
 void sendSwitchNotification(int number)
 {
+printf("Switch %d sending\n", number);
 	char timeString[18];
 	getCurrentTimeInfo(timeString, sizeof(timeString));
   
@@ -21,7 +22,9 @@ void sendSwitchNotification(int number)
       		number,
 		timeString,
 		digitalRead(switchPins[number]));
-	saveAndNotify("switch"+number, json);
+printf("Switch %d notification sent\n", number);
+	saveAndNotify("switch", json);
+printf("Switch %d notification sent to redis\n", number);
 }
 
 void toggleSwitch(int number){

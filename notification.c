@@ -35,6 +35,7 @@ void *listenForNotifications(void *threadId)
 			pthread_cond_wait(&notificationCond, &notificationMutex);
 
 			redisReply *reply;
+printf("Preparing to save %s with %s", key4save, value4save);
 			reply = redisCommand(c, "HSET devices %s %s", key4save, value4save);
 			freeReplyObject(reply);
 			reply = redisCommand(c, "PUBLISH notifications %s", value4save);
@@ -63,6 +64,7 @@ void saveAndNotify(char *key, char *data)
 	key4save = key;
 	value4save = data;
 
+printf("Preparing to send %s with %s", key, data);
 	pthread_cond_signal(&notificationCond);
 	printf("[%ld] End request notification\n", (long)pthread_self());
 	pthread_mutex_unlock(&notificationMutex);
