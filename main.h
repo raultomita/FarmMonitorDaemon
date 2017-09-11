@@ -13,6 +13,8 @@ extern int btnPinFill;
 
 extern int state;
 
+extern char switchPins[8];
+
 void getCurrentTimeInfo(char *timeString, int bufferSize);
 
 extern pthread_cond_t notificationCond;
