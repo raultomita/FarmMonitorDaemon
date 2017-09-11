@@ -24,12 +24,17 @@ void sendSwitchNotification(int number)
 	saveAndNotify("tankLevel", json);
 }
 
+void toggleSwitch(int number){
+	digitalWrite(switchPins[number], !digitalRead(switchPins[number]));
+}
+
 //Public APIs
 void initializeSwitches(void)
 {
   for(int i = 0; i< 8; i++){
     pinMode(switchPins[i], OUTPUT);
-    digitalWrite(commandPinTankInputEv, LOW);
+    digitalWrite(switchPins[i], LOW);
+	  sendSwitchNotificaton(i);
   }	
 }
 }
