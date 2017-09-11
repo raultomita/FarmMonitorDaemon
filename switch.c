@@ -21,7 +21,7 @@ void sendSwitchNotification(int number)
       number,
 			timeString,
 			digitalRead(switchPins[number]));
-	saveAndNotify("tankLevel", json);
+	saveAndNotify("switch"+number, json);
 }
 
 void toggleSwitch(int number){
@@ -31,10 +31,11 @@ void toggleSwitch(int number){
 //Public APIs
 void initializeSwitches(void)
 {
-  for(int i = 0; i< 8; i++){
+int i =0;
+  for(i = 0; i< 8; i++){
     pinMode(switchPins[i], OUTPUT);
     digitalWrite(switchPins[i], LOW);
 	  sendSwitchNotificaton(i);
   }	
 }
-}
+

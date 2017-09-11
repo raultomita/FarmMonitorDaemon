@@ -4,6 +4,7 @@
 #include <pthread.h>
 
 #include "tankLevel.h"
+#include "switch.h"
 #include "watering.h"
 #include "display.h"
 #include "external.h"
@@ -21,7 +22,7 @@ int ledPinTankOutputEvOperation = 25;
 int btnPinDrain = 22;
 int btnPinFill = 27;
 
-char switchPins[8] = [26, 16, 13, 12, 6, 5, 1, 0];
+char switchPins[8] = {26, 16, 13, 12, 6, 5, 1, 0};
 
 pthread_cond_t notificationCond = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t notificationMutex = PTHREAD_MUTEX_INITIALIZER;
