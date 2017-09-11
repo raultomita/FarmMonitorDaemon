@@ -21,6 +21,8 @@ int ledPinTankOutputEvOperation = 25;
 int btnPinDrain = 22;
 int btnPinFill = 27;
 
+char switchPins[8] = [26, 16, 13, 12, 6, 5, 1, 0];
+
 pthread_cond_t notificationCond = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t notificationMutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -46,7 +48,8 @@ int main(void)
 	initializeDisplay();
 	initializeTankLevel();
 	initializeWateringSchedule();
-
+	initializeSwitches();
+	
 	initializeExternalHandlers();
 	delay(100);
 	initializeNotification();
