@@ -17,15 +17,16 @@ void sendSwitchNotification(int number)
   
 	char *json = (char *)malloc((strlen(switchJsonFormat) + strlen(timeString)+1) * sizeof(char));
 	sprintf(json,
-			switchJsonFormat,
-      number,
-			timeString,
-			digitalRead(switchPins[number]));
+		switchJsonFormat,
+      		number,
+		timeString,
+		digitalRead(switchPins[number]));
 	saveAndNotify("switch"+number, json);
 }
 
 void toggleSwitch(int number){
 	digitalWrite(switchPins[number], !digitalRead(switchPins[number]));
+	sendSwitchNotification(number);
 }
 
 //Public APIs
@@ -33,9 +34,9 @@ void initializeSwitches(void)
 {
 int i =0;
   for(i = 0; i< 8; i++){
-    pinMode(switchPins[i], OUTPUT);
-    digitalWrite(switchPins[i], LOW);
-	  sendSwitchNotificaton(i);
+    	pinMode(switchPins[i], OUTPUT);
+    	digitalWrite(switchPins[i], LOW);
+	sendSwitchNotification(i);
   }	
 }
 
