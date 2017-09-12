@@ -11,6 +11,7 @@
 
 char *key4save;
 char *value4save;
+
 void *listenForNotifications(void *threadId)
 {
 	redisContext *c = redisConnect("127.0.0.1", 6379);
@@ -18,8 +19,7 @@ void *listenForNotifications(void *threadId)
 	{
 		if (c)
 		{
-			printf("Error: %s\n", c->errstr);
-			// handle error
+			printf("Error in listening for notifications: %s\n", c->errstr);			
 		}
 		else
 		{
@@ -30,12 +30,13 @@ void *listenForNotifications(void *threadId)
 	{
 		printf("[%ld] Listening fo notifications\n", (long)pthread_self());
 		pthread_mutex_lock(&notificationMutex);
+		
 		while (1)
 		{
 			pthread_cond_wait(&notificationCond, &notificationMutex);
 
 			redisReply *reply;
-printf("Preparing to save %s with %s", key4save, value4save);
+			printf("Preparing to save %s with %s", key4save, value4save);
 			reply = redisCommand(c, "HSET devices %s %s", key4save, value4save);
 			freeReplyObject(reply);
 			reply = redisCommand(c, "PUBLISH notifications %s", value4save);
@@ -58,14 +59,17 @@ void initializeNotification(void)
 
 void saveAndNotify(char *key, char *data)
 {
-	printf("[%ld] Request notification\n", (long)pthread_self());
+	printf("[%ld] Wait for notification\n", (long)pthread_self());
 	pthread_mutex_lock(&notificationMutex);
+
+	printf("Notification received for %s with %s", key, data);
 
 	key4save = key;
 	value4save = data;
 
-printf("Preparing to send %s with %s", key, data);
+	printf("Notification copied for %s with %s", key4save, value4save);
 	pthread_cond_signal(&notificationCond);
-	printf("[%ld] End request notification\n", (long)pthread_self());
+
+	printf("[%ld] Notification signal sent\n", (long)pthread_self());
 	pthread_mutex_unlock(&notificationMutex);
 }

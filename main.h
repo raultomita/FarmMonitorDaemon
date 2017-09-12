@@ -1,5 +1,7 @@
 #include <pthread.h>
 
+extern char* redisHostname;
+
 extern int ledPinTankFull;
 
 extern int commandPinTankInputEv;
