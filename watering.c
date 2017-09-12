@@ -4,7 +4,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "display.h"
 #include "watering.h"
 #include "tankLevel.h"
 #include "notification.h"

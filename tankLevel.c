@@ -4,7 +4,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "display.h"
 #include "tankLevel.h"
 #include "main.h"
 #include "notification.h"
@@ -43,7 +42,7 @@ void displayTankLevel(void)
 	{
 		digitalWrite(ledPinTankFull, HIGH);
 	}
-	displayMessage(0, 7, levelMessage);
+	printf(levelMessage);
 }
 
 void triggerElectroValve(void)
@@ -99,7 +98,6 @@ void initializeTankLevel(void)
 	wiringPiISR(btnPinFill, INT_EDGE_RISING, &fillTankLevel);
 	wiringPiISR(btnPinDrain, INT_EDGE_RISING, &drainTankLevel);
 	//Query tank lavel from sensor
-	displayMessage(0, 0, "Water:");
 	displayTankLevel();
 	triggerElectroValve();
 }

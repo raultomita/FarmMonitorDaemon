@@ -1,12 +1,13 @@
 #include <wiringPi.h>
 #include <time.h>
 #include <stdio.h>
+#include <string.h>
 #include <pthread.h>
+#include <hiredis/hiredis.h>
 
 #include "tankLevel.h"
 #include "switch.h"
 #include "watering.h"
-#include "display.h"
 #include "external.h"
 #include "notification.h"
 #include "main.h"
@@ -47,7 +48,7 @@ void initializeDevices(redisContext *c, char* cursor)
 	printf("Start device initialization\n");
 
 	redisReply *r;
-	reply = redisCommand(c, "SSCAN %s %s", instanceId, cursor);
+	r = redisCommand(c, "SSCAN %s %s", instanceId, cursor);
 
 	if (r->type != REDIS_REPLY_ARRAY)
 	{
@@ -56,8 +57,13 @@ void initializeDevices(redisContext *c, char* cursor)
 		return;
 	}
 
-	if (r->elements == 2)
+	if (r->elements != 2)
 	{
+		int i = 0;
+		for (i = 0; i< r->elements; i++)
+		{
+			printf("element type %d\n", r->element[i]->type);
+		}
 		printf("Array does not contains two elements\n");
 		freeReplyObject(r);
 		return;
@@ -70,9 +76,11 @@ void initializeDevices(redisContext *c, char* cursor)
 		for (dataIndex = 0; dataIndex < r->element[1]->elements; dataIndex++)
 		{
 			replyDeviceId = redisCommand(c, "HGETALL %s", r->element[1]->element[dataIndex]->str);
-			if(replyDeviceId->type == REDIS_REPLY_ARRAY && replyDeviceId->elements > 1 && replyDeviceId->element[0]->str == "type")
+			if(replyDeviceId->type == REDIS_REPLY_ARRAY && 
+			   replyDeviceId->elements > 1 && 
+                           strcmp(replyDeviceId->element[0]->str, "type") == 0)
 			{
-				if(replyDeviceId->element[1]->str == "switch"){
+				if(strcmp(replyDeviceId->element[1]->str, "switch") == 0){
 					printf("Init switch %s\n", r->element[1]->element[dataIndex]->str);
 				}
 			}
@@ -80,7 +88,7 @@ void initializeDevices(redisContext *c, char* cursor)
 		}
 	}
 
-	if (->element[0] != NULL && r->element[0]->str != "0")
+	if (r->element[0] != NULL && strcmp(r->element[0]->str, "0") != 0)
 	{
 		initializeDevices(c, r->element[0]->str);
 	}
