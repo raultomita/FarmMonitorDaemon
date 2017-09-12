@@ -33,13 +33,14 @@ void toggleSwitch(int number){
 }
 
 //Public APIs
-void initializeSwitches(void)
+void initializeSwitches(switch item)
 {
-int i =0;
-  for(i = 0; i< 8; i++){
-    	pinMode(switchPins[i], OUTPUT);
-    	digitalWrite(switchPins[i], LOW);
-	sendSwitchNotification(i);
-  }	
+	printf("Enter in initializeSwitches %s %d", item->id, item->gpio);
+// int i =0;
+//   for(i = 0; i< 8; i++){
+//     	pinMode(switchPins[i], OUTPUT);
+//     	digitalWrite(switchPins[i], LOW);
+// 	sendSwitchNotification(i);
+//   }	
 }
 

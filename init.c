@@ -8,8 +8,10 @@
 #include "tankLevel.h"
 #include "switch.h"
 #include "watering.h"
+
 #include "external.h"
 #include "notification.h"
+
 #include "main.h"
 
 char *instanceId = "mainframe";
@@ -81,7 +83,15 @@ void initializeDevices(redisContext *c, char* cursor)
                            strcmp(replyDeviceId->element[0]->str, "type") == 0)
 			{
 				if(strcmp(replyDeviceId->element[1]->str, "switch") == 0){
-					printf("Init switch %s\n", r->element[1]->element[dataIndex]->str);
+					printf("Init switch with id %s\n", r->element[1]->element[dataIndex]->str);
+					if(replyDeviceId->elements == 4 && replyDeviceId->element[2]->str == "gpio"){
+						struct switch *item = (struct switch*) malloc(sizeof(struct switch));
+						item->id = r->element[1]->element[dataIndex]->str;
+						item->gpio = strtoimax(replyDeviceId->element[3]->str,NULL,10)
+
+						initializeSwitch(item);
+					}
+					
 				}
 			}
 			freeReplyObject(replyDeviceId);

@@ -1,2 +1,7 @@
+struct switch {
+   char* id;   
+   int gpio;
+};
+
 void toggleSwitch(int number);
-void initializeSwitches(void);
+void initializeSwitches(switch item);
