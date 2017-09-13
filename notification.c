@@ -62,12 +62,10 @@ void saveAndNotify(char *key, char *data)
 	printf("[%ld] Wait for notification\n", (long)pthread_self());
 	pthread_mutex_lock(&notificationMutex);
 
-	printf("Notification received for %s with %s", key, data);
-
 	key4save = key;
 	value4save = data;
 
-	printf("Notification copied for %s with %s", key4save, value4save);
+	printf("Notification received for %s with %s", key4save, value4save);
 	pthread_cond_signal(&notificationCond);
 
 	printf("[%ld] Notification signal sent\n", (long)pthread_self());

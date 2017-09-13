@@ -84,8 +84,8 @@ void initializeDevices(redisContext *c, char* cursor)
 			{
 				if(strcmp(replyDeviceId->element[1]->str, "switch") == 0){
 					printf("Init switch with id %s\n", r->element[1]->element[dataIndex]->str);
-					if(replyDeviceId->elements == 4 && replyDeviceId->element[2]->str == "gpio"){						
-						addSwitch(r->element[1]->element[dataIndex]->str, "", "", strtoimax(replyDeviceId->element[3]->str,NULL,10));
+					if(replyDeviceId->elements == 8 && strcmp(replyDeviceId->element[6]->str, "gpio") == 0){						
+						addSwitch(r->element[1]->element[dataIndex]->str, "", "", strtoimax(replyDeviceId->element[7]->str,NULL,10));
 					}
 					
 				}
@@ -108,6 +108,7 @@ int main(void)
 	delay(2000);
 	//Initializes pins as GPIO numbers
 	wiringPiSetupGpio();
+	initializeNotification();
 
 	redisContext *c = redisConnect(redisHostname, 6379);
 	if (c == NULL || c->err)
@@ -125,26 +126,26 @@ int main(void)
 	{
 		initializeDevices(c, "0");
 	}
+	redisFree(c);
 
 	//initializeTankLevel();
 	//initializeWateringSchedule();
 	//initializeSwitches();
 
-	//initializeExternalHandlers();
-	//delay(100);
-	//initializeNotification();
+	initializeExternalHandlers();
+	delay(100);
 	printf("[%ld] ConfigurationComplete\n", pthread_self());
 
 	//do some idle work
-	time_t rawtime;
-	struct tm *timeInfo;
+	//time_t rawtime;
+	//struct tm *timeInfo;
 
 	while (1)
 	{
 		state = !state;
 
-		time(&rawtime);
-		timeInfo = localtime(&rawtime);
+		//time(&rawtime);
+		//timeInfo = localtime(&rawtime);
 
 		//timerCallbackWatering(timeInfo);
 		//timerCallbackTankLevel(timeInfo);

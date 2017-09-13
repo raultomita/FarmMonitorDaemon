@@ -8,43 +8,44 @@
 #include "notification.h"
 
 const char *switchJsonFormat =
-	"{ \"id\": \"switch%d\", \"type\": \"switch\", \"timeStamp\": \"%s\", \"state\": \"%d\" }";
+	" \"id\": \"%s\", \"type\": \"switch\", \"timeStamp\": \"%s\", \"state\": \"%d\" }";
 
-struct SwitchItem
+typedef struct SwitchItem
 {
 	char *deviceId;
 	char *display;
 	char *location;
 	int gpio;
-	SwitchItem *next;
-} * firstSwitch, *lastSwitch;
+	struct SwitchItem *next;
+}SwitchItem_t;
+SwitchItem_t *firstSwitch, *lastSwitch;
 
-void sendSwitchNotification(SwitchItem *switchItem)
+void sendSwitchNotification(SwitchItem_t *switchItem)
 {
-	printf("Switch %d sending\n", number);
+	printf("%s sending\n", switchItem->deviceId);
 	char timeString[18];
 	getCurrentTimeInfo(timeString, sizeof(timeString));
 
-	char *json = (char *)malloc((strlen(switchJsonFormat) + strlen(timeString) + 1) * sizeof(char));
+	char *json = (char *)malloc((strlen(switchJsonFormat) + strlen(timeString) + strlen(switchItem->deviceId)) * sizeof(char));
 	sprintf(json,
 			switchJsonFormat,
-			number,
+			switchItem->deviceId,
 			timeString,
-			digitalRead(switchPins[number]));
-	printf("Switch %d notification sent\n", number);
-	saveAndNotify("switch", json);
-	printf("Switch %d notification sent to redis\n", number);
+			digitalRead(switchItem->gpio));
+	printf("%s notification sent\n", switchItem->deviceId);
+	saveAndNotify(switchItem->deviceId, json);
+	printf("%s notification sent to redis\n", switchItem->deviceId);
 }
 
 void toggleSwitch(char *switchId)
 {
-	SwitchItem *current = *firstSwitch;
+	SwitchItem_t *current = firstSwitch;
 
-	while (current != null)
+	while (current != NULL)
 	{
 		if (strcmp(current->deviceId, switchId) == 0)
 		{
-			digitalWrite(current->gpio, !digitalRead(curren->gpio));
+			digitalWrite(current->gpio, !digitalRead(current->gpio));
 			sendSwitchNotification(current);
 			return;
 		}
@@ -56,8 +57,8 @@ void toggleSwitch(char *switchId)
 //Public APIs
 void addSwitch(char *switchId, char *display, char *location, int gpio)
 {
-	SwitchItem *newDevice = malloc(sizeof(SwitchItem));
-	newDevice->deviceId = malloc(strlen(swithcId) * sizeof(char));
+	SwitchItem_t *newDevice = malloc(sizeof(SwitchItem_t));
+	newDevice->deviceId = malloc(strlen(switchId) * sizeof(char));
 	strcpy(newDevice->deviceId, switchId);
 	newDevice->gpio = gpio;
 
@@ -68,11 +69,11 @@ void addSwitch(char *switchId, char *display, char *location, int gpio)
 	}
 	else
 	{
-		lastSwitch->next = current;
-		lastSwitch = current;
+		lastSwitch->next = newDevice;
+		lastSwitch = newDevice;
 	}
 
 	pinMode(gpio, OUTPUT);
 	digitalWrite(gpio, LOW);
-	sendSwitchNotification(current);
+	sendSwitchNotification(newDevice);
 }
