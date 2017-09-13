@@ -85,7 +85,7 @@ void initializeDevices(redisContext *c, char* cursor)
 				if(strcmp(replyDeviceId->element[1]->str, "switch") == 0){
 					printf("Init switch with id %s\n", r->element[1]->element[dataIndex]->str);
 					if(replyDeviceId->elements == 4 && replyDeviceId->element[2]->str == "gpio"){
-						struct switch *item = (struct switch*) malloc(sizeof(struct switch));
+						struct switchAgent *item = (struct switchAgent*) malloc(sizeof(struct switchAgent));
 						item->id = r->element[1]->element[dataIndex]->str;
 						item->gpio = strtoimax(replyDeviceId->element[3]->str,NULL,10)
 
