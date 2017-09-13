@@ -53,9 +53,9 @@ void onRedisMessageReceived(redisAsyncContext *c, void *reply, void *privdata)
                 triggerTankLevel();
             }
 	    else if (r->element[j]->str != NULL && 
-		     strcmp(r->element[j]->str, "switch") == 0)
+		     strcmp(r->element[j]->str, "switch1") == 0)
    	        {
-                toggleSwitch(2);
+                toggleSwitch("switch1");
             }
         }
     }

@@ -1,2 +1,2 @@
-void toggleSwitch(int number);
-void initializeSwitches(switchAgent item);
+void toggleSwitch(char *switchId);
+void addSwitch(char *switchId, char *display, char *location, int gpio)
