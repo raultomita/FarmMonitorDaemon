@@ -62,10 +62,10 @@ void addSwitch(char *switchId, char *display, char *location, int gpio)
 	newDevice->deviceId = malloc(strlen(switchId) * sizeof(char));
 	strcpy(newDevice->deviceId, switchId);
 
-	newDevice->display = malloc(strlen(display) * sizeof(char))
+	newDevice->display = malloc(strlen(display) * sizeof(char));
 	strcpy(newDevice->display, display);
 
-	newDevice->location = malloc(strlen(location) * sizeof(char))
+	newDevice->location = malloc(strlen(location) * sizeof(char));
 	strcpy(newDevice->location, location);
 
 	newDevice->gpio = gpio;

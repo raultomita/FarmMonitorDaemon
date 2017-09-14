@@ -46,10 +46,10 @@ void addWatering(char *wateringId, char *display, char *location, int commandGpi
 	newDevice->deviceId = malloc(strlen(wateringId) * sizeof(char));
 	strcpy(newDevice->deviceId, wateringId);
 
-	newDevice->display = malloc(strlen(display) * sizeof(char))
+	newDevice->display = malloc(strlen(display) * sizeof(char));
 		strcpy(newDevice->display, display);
 
-	newDevice->location = malloc(strlen(location) * sizeof(char))
+	newDevice->location = malloc(strlen(location) * sizeof(char));
 		strcpy(newDevice->location, location);
 
 	newDevice->commandGpio = commandGpio;
@@ -85,7 +85,7 @@ void timerCallbackWatering(struct tm *timeinfo)
 	while (current != NULL)
 	{
 		int wateringState = digitalRead(current->commandGpio);
-		if (current.wateringSystemOverridedOn != NULL)
+		if (current->wateringSystemOverridedOn != NULL)
 		{
 			//TODO: take over control  after 12 h
 		}
@@ -113,7 +113,7 @@ void timerCallbackWatering(struct tm *timeinfo)
 			digitalWrite(current->notifyGpio, LOW);
 		}
 		
-		current = current.next;
+		current = current->next;
 	}
 }
 
@@ -127,7 +127,7 @@ void triggerWatering(char *deviceId)
 		{
 			time_t rawtime;
 			time(&rawtime);
-			current.wateringSystemOverridedOn = localtime(&rawtime);
+			current->wateringSystemOverridedOn = localtime(&rawtime);
 
 			int currentState = digitalRead(current->commandGpio);
 			digitalWrite(current->commandGpio, !currentState);

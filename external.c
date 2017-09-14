@@ -50,7 +50,7 @@ void onRedisMessageReceived(redisAsyncContext *c, void *reply, void *privdata)
                 }
                 else if (strncmp("tankLevel", r->element[j]->str, strlen("tankLevel")) == 0)
                 {
-                    triggerTankLevel(r->element[j]->str);
+                    //triggerTankLevel(r->element[j]->str);
                 }
                 else if (strncmp("switch", r->element[j]->str, strlen("switch")) == 0)
                 {
@@ -58,7 +58,7 @@ void onRedisMessageReceived(redisAsyncContext *c, void *reply, void *privdata)
                 }
                 else if (strncmp("watering", r->element[j]->str, strlen("watering")) == 0)
                 {
-                    toggleWatering(r->element[j]->str);
+                    triggerWatering(r->element[j]->str);
                 }
             }
         }

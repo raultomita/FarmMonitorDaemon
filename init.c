@@ -45,12 +45,12 @@ void getCurrentTimeInfo(char *timeString, int bufferSize)
 	printf("%s\n", timeString);
 }
 
-bool isInstanceQueryResultValid(redisReply *r)
+int isInstanceQueryResultValid(redisReply *r)
 {
 	if (r->type != REDIS_REPLY_ARRAY)
 	{
 		printf("Response for SSCAN is not an array\n");
-		return false;
+		return 0;
 	}
 
 	if (r->elements != 2)
@@ -61,19 +61,19 @@ bool isInstanceQueryResultValid(redisReply *r)
 			printf("element type %d\n", r->element[i]->type);
 		}
 		printf("Array does not contains two elements\n");
-		return false;
+		return 0;
 	}
 
 	if (r->element[1] == NULL || r->element[1]->type != REDIS_REPLY_ARRAY)
 	{
 		printf("Second element from SSCAN is not an array with device ids\n");
-		return false;
+		return 0;
 	}
 
-	return true;
+	return 1;
 }
 
-bool stilExistItems(redisReply *r)
+int stilExistItems(redisReply *r)
 {
 	return r->element[0] != NULL && strcmp(r->element[0]->str, "0") != 0;
 }
@@ -102,7 +102,7 @@ void initializeWatering(char * deviceId, redisReply *r)
 {
 	printf("Init watering with id %s\n", deviceId);
 	
-	if (r->elements == 10 && strcmp(r->element[6]->str, "commandGpio") == 0 && && strcmp(r->element[8]->str, "notifyGpio") == 0)
+	if (r->elements == 10 && strcmp(r->element[6]->str, "commandGpio") == 0 && strcmp(r->element[8]->str, "notifyGpio") == 0)
 	{
 		addWatering(deviceId, r->element[3]->str, r->element[5]->str, strtoimax(r->element[7]->str, NULL, 10), strtoimax(r->element[9]->str, NULL, 10));
 	}
@@ -136,14 +136,14 @@ void initializeDevices(redisContext *c, char *cursor)
 				{
 					initializeSwitch(r->element[1]->element[dataIndex]->str, replyDeviceId);
 				}
-				else if(strcmp(replyDeviceId->element[1]->str, "tankLevel") == 0)){
+				else if(strcmp(replyDeviceId->element[1]->str, "tankLevel") == 0){
 					initializeTankLevel(r->element[1]->element[dataIndex]->str, replyDeviceId);
 				}
-				else if(strcmp(replyDeviceId->element[1]->str, "watering") == 0)){
+				else if(strcmp(replyDeviceId->element[1]->str, "watering") == 0){
 					initializeWatering(r->element[1]->element[dataIndex]->str, replyDeviceId);
 				}
-				else if(strcmp(replyDeviceId->element[1]->str, "switchButton") == 0)){
-					InitializeSwitchButton(r->element[1]->element[dataIndex]->str, replyDeviceId);
+				else if(strcmp(replyDeviceId->element[1]->str, "switchButton") == 0){
+					//InitializeSwitchButton(r->element[1]->element[dataIndex]->str, replyDeviceId);
 				}
 			}
 			freeReplyObject(replyDeviceId);
