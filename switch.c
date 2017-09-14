@@ -10,19 +10,20 @@
 const char *switchJsonFormat =
 	"{ \"id\": \"%s\", \"type\": \"switch\", \"timeStamp\": \"%s\", \"state\": \"%d\" }";
 
-typedef struct SwitchItem
+typedef struct Switch
 {
 	char *deviceId;
 	char *display;
 	char *location;
 	int gpio;
-	struct SwitchItem *next;
-}SwitchItem_t;
-SwitchItem_t *firstSwitch, *lastSwitch;
+	struct Switch *next;
+} SwitchList;
+SwitchList *firstSwitch, *lastSwitch;
 
-void sendSwitchNotification(SwitchItem_t *switchItem)
+void sendSwitchNotification(SwitchList *switchItem)
 {
 	printf("%s sending\n", switchItem->deviceId);
+
 	char timeString[18];
 	getCurrentTimeInfo(timeString, sizeof(timeString));
 
@@ -39,7 +40,7 @@ void sendSwitchNotification(SwitchItem_t *switchItem)
 
 void toggleSwitch(char *switchId)
 {
-	SwitchItem_t *current = firstSwitch;
+	SwitchList *current = firstSwitch;
 
 	while (current != NULL)
 	{
@@ -57,9 +58,16 @@ void toggleSwitch(char *switchId)
 //Public APIs
 void addSwitch(char *switchId, char *display, char *location, int gpio)
 {
-	SwitchItem_t *newDevice = malloc(sizeof(SwitchItem_t));
+	SwitchList *newDevice = malloc(sizeof(SwitchList));
 	newDevice->deviceId = malloc(strlen(switchId) * sizeof(char));
 	strcpy(newDevice->deviceId, switchId);
+
+	newDevice->display = malloc(strlen(display) * sizeof(char))
+	strcpy(newDevice->display, display);
+
+	newDevice->location = malloc(strlen(location) * sizeof(char))
+	strcpy(newDevice->location, location);
+
 	newDevice->gpio = gpio;
 
 	if (firstSwitch == NULL)
