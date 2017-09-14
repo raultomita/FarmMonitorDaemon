@@ -86,7 +86,7 @@ void drainTankLevel(void)
 }
 
 //Public APIs
-void initializeTankLevel(void)
+void addTankLevel(void)
 {
 	pinMode(ledPinTankFull, OUTPUT);
 	pinMode(ledPinTankInputEvOperation, OUTPUT);
