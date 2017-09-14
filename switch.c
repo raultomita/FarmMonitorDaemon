@@ -8,7 +8,7 @@
 #include "notification.h"
 
 const char *switchJsonFormat =
-	" \"id\": \"%s\", \"type\": \"switch\", \"timeStamp\": \"%s\", \"state\": \"%d\" }";
+	"{ \"id\": \"%s\", \"type\": \"switch\", \"timeStamp\": \"%s\", \"state\": \"%d\" }";
 
 typedef struct SwitchItem
 {
