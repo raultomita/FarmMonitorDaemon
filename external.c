@@ -42,20 +42,24 @@ void onRedisMessageReceived(redisAsyncContext *c, void *reply, void *privdata)
         int j;
         for (j = 2; j < r->elements; j++)
         {
-            if (r->element[j]->str != NULL &&
-                strcmp(r->element[j]->str, "watering1") == 0)
+            if (r->element[j]->str != NULL)
             {
-                triggerWatering();
-            }
-            else if (r->element[j]->str != NULL &&
-                     strcmp(r->element[j]->str, "tankLevel1") == 0)
-            {
-                triggerTankLevel();
-            }
-	    else if (r->element[j]->str != NULL && 
-		     strcmp(r->element[j]->str, "switch1") == 0)
-   	        {
-                toggleSwitch("switch1");
+                if (strncmp("switchButton", r->element[j]->str, strlen("switchButton")) == 0)
+                {
+                    //do nothing
+                }
+                else if (strncmp("tankLevel", r->element[j]->str, strlen("tankLevel")) == 0)
+                {
+                    triggerTankLevel(r->element[j]->str);
+                }
+                else if (strncmp("switch", r->element[j]->str, strlen("switch")) == 0)
+                {
+                    toggleSwitch(r->element[j]->str);
+                }
+                else if (strncmp("watering", r->element[j]->str, strlen("watering")) == 0)
+                {
+                    toggleWatering(r->element[j]->str);
+                }
             }
         }
     }

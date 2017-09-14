@@ -45,58 +45,114 @@ void getCurrentTimeInfo(char *timeString, int bufferSize)
 	printf("%s\n", timeString);
 }
 
-void initializeDevices(redisContext *c, char* cursor)
+bool isInstanceQueryResultValid(redisReply *r)
 {
-	printf("Start device initialization\n");
-
-	redisReply *r;
-	r = redisCommand(c, "SSCAN %s %s", instanceId, cursor);
-
 	if (r->type != REDIS_REPLY_ARRAY)
 	{
 		printf("Response for SSCAN is not an array\n");
-		freeReplyObject(r);
-		return;
+		return false;
 	}
 
 	if (r->elements != 2)
 	{
 		int i = 0;
-		for (i = 0; i< r->elements; i++)
+		for (i = 0; i < r->elements; i++)
 		{
 			printf("element type %d\n", r->element[i]->type);
 		}
 		printf("Array does not contains two elements\n");
-		freeReplyObject(r);
-		return;
+		return false;
 	}
 
-	if (r->element[1] != NULL && r->element[1]->type == REDIS_REPLY_ARRAY)
+	if (r->element[1] == NULL || r->element[1]->type != REDIS_REPLY_ARRAY)
+	{
+		printf("Second element from SSCAN is not an array with device ids\n");
+		return false;
+	}
+
+	return true;
+}
+
+bool stilExistItems(redisReply *r)
+{
+	return r->element[0] != NULL && strcmp(r->element[0]->str, "0") != 0;
+}
+
+void initializeSwitch(char * deviceId, redisReply *r)
+{
+	printf("Init switch with id %s\n", deviceId);
+	
+	if (r->elements == 8 && strcmp(r->element[6]->str, "gpio") == 0)
+	{
+		addSwitch(deviceId, r->element[3]->str, r->element[5]->str, strtoimax(r->element[7]->str, NULL, 10));
+	}
+}
+
+void initializeTankLevel(char * deviceId, redisReply *r)
+{
+	printf("Init switch with id %s\n", deviceId);
+	
+	if (r->elements == 8 && strcmp(r->element[6]->str, "gpio") == 0)
+	{
+		//addTankLevel(deviceId, r->element[3]->str, r->element[5]->str, strtoimax(r->element[7]->str, NULL, 10));
+	}
+}
+
+void initializeWatering(char * deviceId, redisReply *r)
+{
+	printf("Init watering with id %s\n", deviceId);
+	
+	if (r->elements == 10 && strcmp(r->element[6]->str, "commandGpio") == 0 && && strcmp(r->element[8]->str, "notifyGpio") == 0)
+	{
+		addWatering(deviceId, r->element[3]->str, r->element[5]->str, strtoimax(r->element[7]->str, NULL, 10), strtoimax(r->element[9]->str, NULL, 10));
+	}
+}
+
+void initializeSwitchButton(char * deviceId, redisReply *r)
+{
+	printf("Switch button not supported with id %s\n", deviceId);
+	
+	
+}
+
+void initializeDevices(redisContext *c, char *cursor)
+{
+	printf("Query for device ids for cursor %s\n", cursor);
+
+	redisReply *r = redisCommand(c, "SSCAN %s %s", instanceId, cursor);
+
+	if (isInstanceQueryResultValid(r))
 	{
 		redisReply *replyDeviceId;
 		int dataIndex;
 		for (dataIndex = 0; dataIndex < r->element[1]->elements; dataIndex++)
 		{
 			replyDeviceId = redisCommand(c, "HGETALL %s", r->element[1]->element[dataIndex]->str);
-			if(replyDeviceId->type == REDIS_REPLY_ARRAY && 
-			   replyDeviceId->elements > 1 && 
-                           strcmp(replyDeviceId->element[0]->str, "type") == 0)
+			if (replyDeviceId->type == REDIS_REPLY_ARRAY &&
+				replyDeviceId->elements > 1 &&
+				strcmp(replyDeviceId->element[0]->str, "type") == 0)
 			{
-				if(strcmp(replyDeviceId->element[1]->str, "switch") == 0){
-					printf("Init switch with id %s\n", r->element[1]->element[dataIndex]->str);
-					if(replyDeviceId->elements == 8 && strcmp(replyDeviceId->element[6]->str, "gpio") == 0){						
-						addSwitch(r->element[1]->element[dataIndex]->str, "", "", strtoimax(replyDeviceId->element[7]->str,NULL,10));
-					}
-					
+				if (strcmp(replyDeviceId->element[1]->str, "switch") == 0)
+				{
+					initializeSwitch(r->element[1]->element[dataIndex]->str, replyDeviceId);
+				}
+				else if(strcmp(replyDeviceId->element[1]->str, "tankLevel") == 0)){
+					initializeTankLevel(r->element[1]->element[dataIndex]->str, replyDeviceId);
+				}
+				else if(strcmp(replyDeviceId->element[1]->str, "watering") == 0)){
+					initializeWatering(r->element[1]->element[dataIndex]->str, replyDeviceId);
+				}
+				else if(strcmp(replyDeviceId->element[1]->str, "switchButton") == 0)){
+					InitializeSwitchButton(r->element[1]->element[dataIndex]->str, replyDeviceId);
 				}
 			}
 			freeReplyObject(replyDeviceId);
 		}
-	}
 
-	if (r->element[0] != NULL && strcmp(r->element[0]->str, "0") != 0)
-	{
-		initializeDevices(c, r->element[0]->str);
+		if (stilExistItems(r))
+		{
+			initializeDevices(c, r->element[0]->str);
+		}
 	}
 
 	freeReplyObject(r);
@@ -128,26 +184,22 @@ int main(void)
 	}
 	redisFree(c);
 
-	//initializeTankLevel();
-	//initializeWateringSchedule();
-	//initializeSwitches();
-
 	initializeExternalHandlers();
 	delay(100);
 	printf("[%ld] ConfigurationComplete\n", pthread_self());
 
 	//do some idle work
-	//time_t rawtime;
-	//struct tm *timeInfo;
+	time_t rawtime;
+	struct tm *timeInfo;
 
 	while (1)
 	{
 		state = !state;
 
-		//time(&rawtime);
-		//timeInfo = localtime(&rawtime);
+		time(&rawtime);
+		timeInfo = localtime(&rawtime);
 
-		//timerCallbackWatering(timeInfo);
+		timerCallbackWatering(timeInfo);
 		//timerCallbackTankLevel(timeInfo);
 
 		delay(1000);
