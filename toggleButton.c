@@ -13,25 +13,38 @@ typedef struct ToggleButton
     char *deviceId;
     int gpio;
     char *targetDeviceId;
+    void (*function)(void);
 
     struct ToggleButton *next;
 } ToggleButtonList;
 ToggleButtonList *firstToggleButton, *lastToggleButton;
 
-void toggleTargetDeviceId(char *targetDeviceId)
+void toggleTargetDeviceId(int pinNumber)
 {
-    if (strncmp("tankLevel", targetDeviceId, strlen("tankLevel")) == 0)
-    {
-        triggerTankLevel(targetDeviceId);
-    }
-    else if (strncmp("switch", targetDeviceId, strlen("switch")) == 0)
-    {
-        toggleSwitch(targetDeviceId);
-    }
-    else if (strncmp("watering", targetDeviceId, strlen("watering")) == 0)
-    {
-        triggerWatering(targetDeviceId);
-    }
+	printf("toggle pin number %d\n", pinNumber);
+	ToggleButtonList *current = firstToggleButton;
+	while (current != NULL)
+	{
+		if(current->gpio == pinNumber)
+		{
+			printf("toggleDeficeId %s\n", current->deviceId);
+
+    			if (strncmp("tankLevel", current->targetDeviceId, strlen("tankLevel")) == 0)
+    			{
+        			triggerTankLevel(current->targetDeviceId);
+    			}
+    			else if (strncmp("switch", current->targetDeviceId, strlen("switch")) == 0)
+    			{
+        			toggleSwitch(current->targetDeviceId);
+    			}
+    			else if (strncmp("watering", current->targetDeviceId, strlen("watering")) == 0)
+    			{
+        			triggerWatering(current->targetDeviceId);
+    			}
+			return;
+		}
+		current = current->next;
+	}
 }
 
 void addToggleButton(char *toggleButtonId, int gpio, char *targetDeviceId)
@@ -59,9 +72,5 @@ void addToggleButton(char *toggleButtonId, int gpio, char *targetDeviceId)
     pinMode(newDevice->gpio, INPUT);
     pullUpDnControl(newDevice->gpio, PUD_UP);
     
-    void toggleButtonInline(void){
-        toggleTargetDeviceId(newDevice->targetDeviceId);
-    }
-
-    wiringPiISR(btnPinFill, INT_EDGE_RISING, &toggleButtonInline);
+    wiringPiISR(newDevice->gpio, INT_EDGE_RISING, &toggleTargetDeviceId);
 }
