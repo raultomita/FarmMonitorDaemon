@@ -8,7 +8,7 @@
 #include "tankLevel.h"
 #include "watering.h"
 
-    typedef struct ToggleButton
+typedef struct ToggleButton
 {
     char *deviceId;
     int gpio;
@@ -58,5 +58,10 @@ void addToggleButton(char *toggleButtonId, int gpio, char *targetDeviceId)
 
     pinMode(newDevice->gpio, INPUT);
     pullUpDnControl(newDevice->gpio, PUD_UP);
-    //wiringPiISR(btnPinFill, INT_EDGE_RISING, &fillTankLevel);
+    
+    void toggleButtonInline(void){
+        toggleTargetDeviceId(newDevice->targetDeviceId);
+    }
+
+    wiringPiISR(btnPinFill, INT_EDGE_RISING, &toggleButtonInline);
 }
