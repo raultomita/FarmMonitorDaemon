@@ -8,7 +8,7 @@
 #include "notification.h"
 
 const char *switchJsonFormat =
-	"{ \"id\": \"%s\", \"type\": \"switch\", \"timeStamp\": \"%s\", \"state\": \"%d\" }";
+	"{ \"id\": \"%s\", \"type\": \"switch\", \"display\":\"%s\", \"location\":\"%s\", \"timeStamp\": \"%s\", \"state\": \"%d\" }";
 
 typedef struct Switch
 {
@@ -27,13 +27,18 @@ void sendSwitchNotification(SwitchList *switchItem)
 	char timeString[18];
 	getCurrentTimeInfo(timeString, sizeof(timeString));
 
-	char *json = (char *)malloc((strlen(switchJsonFormat) + strlen(timeString) + strlen(switchItem->deviceId)) * sizeof(char));
+	char *json = (char *)malloc((strlen(switchJsonFormat) + strlen(timeString) + strlen(switchItem->deviceId) +
+								 strlen(switchItem->display) + strlen(switchItem->location)) *
+								sizeof(char));
+
 	sprintf(json,
 			switchJsonFormat,
 			switchItem->deviceId,
+			switchItem->display,
+			switchItem->location,
 			timeString,
 			digitalRead(switchItem->gpio));
-	printf("%s notification sent\n", switchItem->deviceId);
+
 	saveAndNotify(switchItem->deviceId, json);
 	printf("%s notification sent to redis\n", switchItem->deviceId);
 }

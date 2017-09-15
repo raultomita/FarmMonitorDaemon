@@ -10,7 +10,7 @@
 #include "main.h"
 
 const char *wateringStateJsonFormat =
-	"{ \"id\": \"%s\", \"type\": \"watering\", \"timeStamp\":\"%s\", \"state\": \"%d\" }";
+	"{ \"id\": \"%s\", \"type\": \"watering\", \"display\":\"%s\", \"location\":\"%s\", \"timeStamp\":\"%s\", \"state\": \"%d\" }";
 
 typedef struct Watering
 {
@@ -32,9 +32,13 @@ void sendWateringNotification(WateringList *watering)
 
 	printf("%s\n", timeString);
 
-	char *json = (char *)malloc((strlen(wateringStateJsonFormat) + strlen(timeString) + strlen(watering->deviceId)) * sizeof(char));
+	char *json = (char *)malloc((strlen(wateringStateJsonFormat) + strlen(timeString) + strlen(watering->deviceId) +
+								 strlen(watering->display) + strlen(watering->location)) *
+								sizeof(char));
 	sprintf(json, wateringStateJsonFormat,
 			watering->deviceId,
+			watering->display,
+			watering->location,
 			timeString,
 			digitalRead(watering->commandGpio));
 	saveAndNotify(watering->deviceId, json);
@@ -47,10 +51,10 @@ void addWatering(char *wateringId, char *display, char *location, int commandGpi
 	strcpy(newDevice->deviceId, wateringId);
 
 	newDevice->display = malloc(strlen(display) * sizeof(char));
-		strcpy(newDevice->display, display);
+	strcpy(newDevice->display, display);
 
 	newDevice->location = malloc(strlen(location) * sizeof(char));
-		strcpy(newDevice->location, location);
+	strcpy(newDevice->location, location);
 
 	newDevice->commandGpio = commandGpio;
 	newDevice->notifyGpio = notifyGpio;
@@ -97,7 +101,7 @@ void timerCallbackWatering(struct tm *timeinfo)
 		{
 			wateringState = LOW;
 		}
-		
+
 		if (wateringState != digitalRead(current->commandGpio))
 		{
 			digitalWrite(current->commandGpio, wateringState);
@@ -112,7 +116,7 @@ void timerCallbackWatering(struct tm *timeinfo)
 		{
 			digitalWrite(current->notifyGpio, LOW);
 		}
-		
+
 		current = current->next;
 	}
 }

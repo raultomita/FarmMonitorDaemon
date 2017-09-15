@@ -14,7 +14,20 @@ const int emptyCell = '_';
 const int fullCell = '+';
 char levelMessage[10] = "__________";
 const char *tankLevelJsonFormat =
-	"{ \"id\": \"tankLevel1\", \"type\": \"tankLevel\", \"timeStamp\": \"%s\", \"level\": \"%d\", \"inputState\": \"%d\" }";
+	"{ \"id\": \"%s\", \"type\": \"tankLevel\", \"display\":\"%s\", \"location\":\"%s\", \"timeStamp\": \"%s\", \"level\": \"%d\", \"state\": \"%d\" }";
+
+typedef struct TankLevel
+{
+	char *deviceId;
+	char *display;
+	char *location;
+	int commandGpio;
+	int notifyGpio;
+	int levelGpio;
+
+	struct TankLevel *next;
+} TankLevel;
+TankLevel *firstTankLevel, *lastTankLevel;
 
 void sendTankLevelNotification(void)
 {
@@ -86,7 +99,7 @@ void drainTankLevel(void)
 }
 
 //Public APIs
-void addTankLevel(void)
+void addTankLevel(char *tankLevelId, char *display, char *location, int commandGpio, int notifyGpio, int levelGpio)
 {
 	pinMode(ledPinTankFull, OUTPUT);
 	pinMode(ledPinTankInputEvOperation, OUTPUT);
