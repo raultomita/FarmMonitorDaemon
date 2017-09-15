@@ -93,9 +93,13 @@ void initializeTankLevel(char * deviceId, redisReply *r)
 {
 	printf("Init switch with id %s\n", deviceId);
 	
-	if (r->elements == 8 && strcmp(r->element[6]->str, "gpio") == 0)
+	if (r->elements == 12 && strcmp(r->element[6]->str, "commandGpio") == 0 &&
+	 	strcmp(r->element[8]->str, "notifyGpio") == 0 && strcmp(r->element[10]->str, "levelGpio") == 0)
 	{
-		//addTankLevel(deviceId, r->element[3]->str, r->element[5]->str, strtoimax(r->element[7]->str, NULL, 10));
+		addTankLevel(deviceId, r->element[3]->str, r->element[5]->str, 
+			strtoimax(r->element[7]->str, NULL, 10), 
+			strtoimax(r->element[9]->str, NULL, 10),
+			strtoimax(r->element[11]->str, NULL, 10));
 	}
 }
 
@@ -109,11 +113,14 @@ void initializeWatering(char * deviceId, redisReply *r)
 	}
 }
 
-void initializeSwitchButton(char * deviceId, redisReply *r)
+void initializeToggleButton(char * deviceId, redisReply *r)
 {
-	printf("Switch button not supported with id %s\n", deviceId);
+	printf("Init toggle button with id %s\n", deviceId);
 	
-	
+	if (r->elements == 6 && strcmp(r->element[2]->str, "gpio") == 0 && strcmp(r->element[4]->str, "targetDeviceId") == 0)
+	{
+		addToggleButton(deviceId, strtoimax(r->element[3]->str, NULL, 10), r->element[5]->str);
+	}
 }
 
 void initializeDevices(redisContext *c, char *cursor)
@@ -143,8 +150,8 @@ void initializeDevices(redisContext *c, char *cursor)
 				else if(strcmp(replyDeviceId->element[1]->str, "watering") == 0){
 					initializeWatering(r->element[1]->element[dataIndex]->str, replyDeviceId);
 				}
-				else if(strcmp(replyDeviceId->element[1]->str, "switchButton") == 0){
-					//InitializeSwitchButton(r->element[1]->element[dataIndex]->str, replyDeviceId);
+				else if(strcmp(replyDeviceId->element[1]->str, "toggleButton") == 0){
+					initializeToggleButton(r->element[1]->element[dataIndex]->str, replyDeviceId);
 				}
 			}
 			freeReplyObject(replyDeviceId);
@@ -201,7 +208,7 @@ int main(void)
 		timeInfo = localtime(&rawtime);
 
 		timerCallbackWatering(timeInfo);
-		//timerCallbackTankLevel(timeInfo);
+		timerCallbackTankLevel(timeInfo);
 
 		delay(1000);
 	}

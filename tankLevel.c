@@ -8,11 +8,6 @@
 #include "main.h"
 #include "notification.h"
 
-int tankLevelInitialized = 0;
-volatile int tankState = 0;
-const int emptyCell = '_';
-const int fullCell = '+';
-char levelMessage[10] = "__________";
 const char *tankLevelJsonFormat =
 	"{ \"id\": \"%s\", \"type\": \"tankLevel\", \"display\":\"%s\", \"location\":\"%s\", \"timeStamp\": \"%s\", \"level\": \"%d\", \"state\": \"%d\" }";
 
@@ -24,131 +19,172 @@ typedef struct TankLevel
 	int commandGpio;
 	int notifyGpio;
 	int levelGpio;
+	int level;
 
 	struct TankLevel *next;
-} TankLevel;
-TankLevel *firstTankLevel, *lastTankLevel;
+} TankLevelList;
+TankLevelList *firstTankLevel, *lastTankLevel;
 
-void sendTankLevelNotification(void)
+void sendTankLevelNotification(TankLevelList *tankLevel)
 {
 	char timeString[18];
 	getCurrentTimeInfo(timeString, sizeof(timeString));
 
 	printf("%s\n", timeString);
 
-	char *json = (char *)malloc((strlen(tankLevelJsonFormat) + strlen(timeString)) * sizeof(char));
+	char *json = (char *)malloc((strlen(tankLevelJsonFormat) + strlen(timeString) + strlen(tankLevel->deviceId) +
+								 strlen(tankLevel->display) + strlen(tankLevel->location)) * sizeof(char));
 	sprintf(json,
-			tankLevelJsonFormat,
+			tankLevelJsonFormat,			
+			tankLevel->deviceId,
+			tankLevel->display,
+			tankLevel->location,
 			timeString,
-			tankState,
-			digitalRead(commandPinTankInputEv));
-	saveAndNotify("tankLevel", json);
+			tankLevel->level,
+			digitalRead(tankLevel->commandGpio));
+
+	saveAndNotify(tankLevel->deviceId, json);
 }
 
-void displayTankLevel(void)
+void displayTankLevel(TankLevelList *tankLevel)
 {
-	if (tankState < 10)
+	if (tankLevel->level < 10)
 	{
-		digitalWrite(ledPinTankFull, LOW);
+		digitalWrite(tankLevel->levelGpio, LOW);
 	}
 	else
 	{
-		digitalWrite(ledPinTankFull, HIGH);
+		digitalWrite(tankLevel->levelGpio, HIGH);
 	}
-	printf(levelMessage);
+
+	printf("Level is %s\n", tankLevel->level);
 }
 
-void triggerElectroValve(void)
+void triggerElectroValve(TankLevelList *tankLevel)
 {
-	if (tankState <= 3)
+	if (tankLevel->level <= 3)
 	{
-		digitalWrite(commandPinTankInputEv, HIGH);
+		digitalWrite(tankLevel->commandGpio, HIGH);
 	}
-	else if (tankState == 10)
+	else if (TankLevel->level == 10)
 	{
-		digitalWrite(commandPinTankInputEv, LOW);
+		digitalWrite(tankLevel->commandGpio, LOW);
 	}
 }
 
 //Interrupts callbacks
-void fillTankLevel(void)
-{
-	if (tankState < 10)
-	{
+// void fillTankLevel(void)
+// {
+// 	if (tankState < 10)
+// 	{
+// 		tankState += 1;
+// 		levelMessage[tankState - 1] = fullCell;
 
-		tankState += 1;
-		levelMessage[tankState - 1] = fullCell;
+// 		displayTankLevel();
+// 		triggerElectroValve();
+// 		sendTankLevelNotification();
+// 	}
+// }
 
-		displayTankLevel();
-		triggerElectroValve();
-		sendTankLevelNotification();
-	}
-}
+// void drainTankLevel(void)
+// {
+// 	if (tankState > 0)
+// 	{
+// 		levelMessage[tankState - 1] = emptyCell;
+// 		tankState -= 1;
 
-void drainTankLevel(void)
-{
-	if (tankState > 0)
-	{
-		levelMessage[tankState - 1] = emptyCell;
-		tankState -= 1;
-
-		displayTankLevel();
-		triggerElectroValve();
-		sendTankLevelNotification();
-	}
-}
+// 		displayTankLevel();
+// 		triggerElectroValve();
+// 		sendTankLevelNotification();
+// 	}
+// }
 
 //Public APIs
 void addTankLevel(char *tankLevelId, char *display, char *location, int commandGpio, int notifyGpio, int levelGpio)
 {
-	pinMode(ledPinTankFull, OUTPUT);
-	pinMode(ledPinTankInputEvOperation, OUTPUT);
-	pinMode(commandPinTankInputEv, OUTPUT);
-	pinMode(btnPinFill, INPUT);
-	pinMode(btnPinDrain, INPUT);
-	pullUpDnControl(btnPinFill, PUD_UP);
-	pullUpDnControl(btnPinDrain, PUD_UP);
-	wiringPiISR(btnPinFill, INT_EDGE_RISING, &fillTankLevel);
-	wiringPiISR(btnPinDrain, INT_EDGE_RISING, &drainTankLevel);
-	//Query tank lavel from sensor
-	displayTankLevel();
-	triggerElectroValve();
-}
+	TankLevelList *newDevice = malloc(sizeof(TankLevelList));
+	newDevice->deviceId = malloc(strlen(tankLevelId) * sizeof(char));
+	strcpy(newDevice->deviceId, tankLevelId);
 
-int getTankLevel(void)
-{
-	return tankState * 10;
-}
+	newDevice->display = malloc(strlen(display) * sizeof(char));
+	strcpy(newDevice->display, display);
 
-void triggerTankLevel(void)
-{
-	if (tankState < 10)
+	newDevice->location = malloc(strlen(location) * sizeof(char));
+	strcpy(newDevice->location, location);
+
+	newDevice->commandGpio = commandGpio;
+	newDevice->notifyGpio = notifyGpio;
+	newDevice->levelGpio = levelGpio;
+	newDevice->level = 0;
+
+	if (firstTankLevel == NULL)
 	{
-		digitalWrite(commandPinTankInputEv, !digitalRead(commandPinTankInputEv));
+		firstTankLevel = newDevice;
+		lastTankLevel = newDevice;
 	}
 	else
 	{
-		digitalWrite(commandPinTankInputEv, LOW);
+		lastTankLevel->next = newDevice;
+		lastTankLevel = newDevice;
 	}
 
-	sendTankLevelNotification();
+	pinMode(newDevice->commandGpio, OUTPUT);
+	pinMode(newDevice->notifyGpio, OUTPUT);
+	pinMode(newDevice->levelGpio, OUTPUT);
+	// pinMode(btnPinFill, INPUT);
+	// pinMode(btnPinDrain, INPUT);
+	// pullUpDnControl(btnPinFill, PUD_UP);
+	// pullUpDnControl(btnPinDrain, PUD_UP);
+	// wiringPiISR(btnPinFill, INT_EDGE_RISING, &fillTankLevel);
+	// wiringPiISR(btnPinDrain, INT_EDGE_RISING, &drainTankLevel);
+	//Query tank lavel from sensor
+	displayTankLevel(newDevice);
+	triggerElectroValve(newDevice);
+	digitalWrite(newDevice->notifyGpio, LOW);
+
+}
+
+void triggerTankLevel(char *deviceId)
+{
+	TankLevelList *current = firstTankLevel;
+
+	while (current != NULL)
+	{
+		if (strcmp(current->deviceId, deviceId) == 0)
+		{
+			if (current->level < 10)
+			{
+				digitalWrite(current->commandGpio, !digitalRead(current->commandGpio));
+			}
+			else
+			{
+				digitalWrite(current->commandGpio, LOW);
+			}
+
+			sendTankLevelNotification(current);
+			return;
+		}
+
+		current = current->next;
+	}
 }
 
 void timerCallbackTankLevel(struct tm *timeinfo)
 {
-	if (!tankLevelInitialized)
-	{
-		sendTankLevelNotification();
-		tankLevelInitialized = 1;
-	}
+	TankLevelList *current = firstTankLevel;
 
-	int value = digitalRead(commandPinTankInputEv);
-	if (value == HIGH)
+	while (current != NULL)
 	{
-		digitalWrite(ledPinTankInputEvOperation, state);
-	}
-	else
-	{
-		digitalWrite(ledPinTankInputEvOperation, LOW);
+		int value = digitalRead(current->commandGpio);
+		if (value == HIGH)
+		{
+			digitalWrite(current->notifyGpio, state);
+		}
+		else
+		{
+			digitalWrite(current->notifyGpio, LOW);
+		}
+
+		current = current->next;
 	}
 }
