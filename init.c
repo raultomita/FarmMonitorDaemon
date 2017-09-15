@@ -9,6 +9,7 @@
 #include "tankLevel.h"
 #include "switch.h"
 #include "watering.h"
+#include "toggleButton.h"
 
 #include "external.h"
 #include "notification.h"
@@ -207,8 +208,8 @@ int main(void)
 		time(&rawtime);
 		timeInfo = localtime(&rawtime);
 
-		timerCallbackWatering(timeInfo);
-		timerCallbackTankLevel(timeInfo);
+		//timerCallbackWatering(timeInfo);
+		//timerCallbackTankLevel(timeInfo);
 
 		delay(1000);
 	}

@@ -44,7 +44,7 @@ void onRedisMessageReceived(redisAsyncContext *c, void *reply, void *privdata)
         {
             if (r->element[j]->str != NULL)
             {
-                else if (strncmp("tankLevel", r->element[j]->str, strlen("tankLevel")) == 0)
+                if (strncmp("tankLevel", r->element[j]->str, strlen("tankLevel")) == 0)
                 {
                     triggerTankLevel(r->element[j]->str);
                 }

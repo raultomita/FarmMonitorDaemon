@@ -74,6 +74,7 @@ void addWatering(char *wateringId, char *display, char *location, int commandGpi
 	pinMode(newDevice->notifyGpio, OUTPUT);
 	digitalWrite(newDevice->commandGpio, LOW);
 	digitalWrite(newDevice->notifyGpio, LOW);
+        sendWateringNotification(newDevice);
 }
 
 int hasSoilEnoughWater(void)

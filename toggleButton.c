@@ -1,9 +1,10 @@
-include<wiringPi.h>
+#include <wiringPi.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
 #include "toggleButton.h"
+#include "switch.h"
 #include "tankLevel.h"
 #include "watering.h"
 

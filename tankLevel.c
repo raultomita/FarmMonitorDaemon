@@ -57,7 +57,7 @@ void displayTankLevel(TankLevelList *tankLevel)
 		digitalWrite(tankLevel->levelGpio, HIGH);
 	}
 
-	printf("Level is %s\n", tankLevel->level);
+	printf("Level is %d\n", tankLevel->level);
 }
 
 void triggerElectroValve(TankLevelList *tankLevel)
@@ -66,7 +66,7 @@ void triggerElectroValve(TankLevelList *tankLevel)
 	{
 		digitalWrite(tankLevel->commandGpio, HIGH);
 	}
-	else if (TankLevel->level == 10)
+	else if (tankLevel->level == 10)
 	{
 		digitalWrite(tankLevel->commandGpio, LOW);
 	}
@@ -109,6 +109,7 @@ void addTankLevel(char *tankLevelId, char *display, char *location, int commandG
 	displayTankLevel(newDevice);
 	triggerElectroValve(newDevice);
 	digitalWrite(newDevice->notifyGpio, LOW);
+	sendTankLevelNotification(newDevice);
 
 }
 
