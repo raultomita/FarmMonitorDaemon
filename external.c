@@ -44,10 +44,6 @@ void onRedisMessageReceived(redisAsyncContext *c, void *reply, void *privdata)
         {
             if (r->element[j]->str != NULL)
             {
-                if (strncmp("toggleButton", r->element[j]->str, strlen("toggleButton")) == 0)
-                {
-                    //do nothing
-                }
                 else if (strncmp("tankLevel", r->element[j]->str, strlen("tankLevel")) == 0)
                 {
                     triggerTankLevel(r->element[j]->str);

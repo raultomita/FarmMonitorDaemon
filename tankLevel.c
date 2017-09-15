@@ -72,33 +72,6 @@ void triggerElectroValve(TankLevelList *tankLevel)
 	}
 }
 
-//Interrupts callbacks
-// void fillTankLevel(void)
-// {
-// 	if (tankState < 10)
-// 	{
-// 		tankState += 1;
-// 		levelMessage[tankState - 1] = fullCell;
-
-// 		displayTankLevel();
-// 		triggerElectroValve();
-// 		sendTankLevelNotification();
-// 	}
-// }
-
-// void drainTankLevel(void)
-// {
-// 	if (tankState > 0)
-// 	{
-// 		levelMessage[tankState - 1] = emptyCell;
-// 		tankState -= 1;
-
-// 		displayTankLevel();
-// 		triggerElectroValve();
-// 		sendTankLevelNotification();
-// 	}
-// }
-
 //Public APIs
 void addTankLevel(char *tankLevelId, char *display, char *location, int commandGpio, int notifyGpio, int levelGpio)
 {
@@ -131,12 +104,7 @@ void addTankLevel(char *tankLevelId, char *display, char *location, int commandG
 	pinMode(newDevice->commandGpio, OUTPUT);
 	pinMode(newDevice->notifyGpio, OUTPUT);
 	pinMode(newDevice->levelGpio, OUTPUT);
-	// pinMode(btnPinFill, INPUT);
-	// pinMode(btnPinDrain, INPUT);
-	// pullUpDnControl(btnPinFill, PUD_UP);
-	// pullUpDnControl(btnPinDrain, PUD_UP);
-	// wiringPiISR(btnPinFill, INT_EDGE_RISING, &fillTankLevel);
-	// wiringPiISR(btnPinDrain, INT_EDGE_RISING, &drainTankLevel);
+	
 	//Query tank lavel from sensor
 	displayTankLevel(newDevice);
 	triggerElectroValve(newDevice);
