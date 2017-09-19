@@ -71,6 +71,9 @@ void addToggleButton(char *toggleButtonId, int gpio, char *targetDeviceId)
 
     pinMode(newDevice->gpio, INPUT);
     pullUpDnControl(newDevice->gpio, PUD_UP);
-    
+   printf("Gpio for button: %d\n", newDevice->gpio); 
     wiringPiISR(newDevice->gpio, INT_EDGE_RISING, &toggleTargetDeviceId);
+}
+void tryReadButton(void){
+	printf("button: %d\n", digitalRead(firstToggleButton->gpio));
 }

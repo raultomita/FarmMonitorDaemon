@@ -210,7 +210,7 @@ int main(void)
 
 		//timerCallbackWatering(timeInfo);
 		//timerCallbackTankLevel(timeInfo);
-
+		tryReadButton();
 		delay(1000);
 	}
 	return 0;
