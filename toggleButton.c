@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "toggleButton.h"
 #include "switch.h"
@@ -13,7 +14,7 @@ typedef struct ToggleButton
     char *deviceId;
     int gpio;
     char *targetDeviceId;
-    void (*function)(void);
+    time_t lastTriggerTime;
 
     struct ToggleButton *next;
 } ToggleButtonList;
@@ -21,12 +22,22 @@ ToggleButtonList *firstToggleButton, *lastToggleButton;
 
 void toggleTargetDeviceId(int pinNumber)
 {
-	printf("toggle pin number %d\n", pinNumber);
+	if(digitalRead(pinNumber) == LOW) return;
+	printf("toggle pin number %d with value %d\n", pinNumber, digitalRead(pinNumber));
 	ToggleButtonList *current = firstToggleButton;
 	while (current != NULL)
 	{
 		if(current->gpio == pinNumber)
 		{
+			time_t rawtime;
+			time(&rawtime);
+double differenceInSec = difftime(rawtime, current->lastTriggerTime);
+printf("difference is %f\n", differenceInSec);
+			 
+			if(differenceInSec <= 1)
+{return;}
+			current->lastTriggerTime = rawtime;
+
 			printf("toggleDeficeId %s\n", current->deviceId);
 
     			if (strncmp("tankLevel", current->targetDeviceId, strlen("tankLevel")) == 0)
@@ -75,5 +86,5 @@ void addToggleButton(char *toggleButtonId, int gpio, char *targetDeviceId)
     wiringPiISR(newDevice->gpio, INT_EDGE_RISING, &toggleTargetDeviceId);
 }
 void tryReadButton(void){
-	printf("button: %d\n", digitalRead(firstToggleButton->gpio));
+//	printf("button: %d\n", digitalRead(firstToggleButton->gpio));
 }

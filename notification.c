@@ -65,9 +65,7 @@ void saveAndNotify(char *key, char *data)
 	key4save = key;
 	value4save = data;
 
-	printf("Notification received for %s with %s\n", key4save, value4save);
 	pthread_cond_signal(&notificationCond);
 
-	printf("[%ld] Notification signal sent\n", (long)pthread_self());
 	pthread_mutex_unlock(&notificationMutex);
 }
