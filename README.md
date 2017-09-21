@@ -41,11 +41,10 @@ sudo reboot
 ##TODO
 
 - [Daemon] Integrare TankLevel
-- [Daemon] Implementare ToggleButton
+
 - [Daemon] Call dummy catre web si redis pentru performanta
 - [Daemon] Integrare docker
-- [Web] Implentare controale
+- [Web] Implentare controale (TankLevel)
 - [Web] Autoconnect webSocket
 - [Deploy] Docker pentru Redis
 - [Hard] Taiat geam
-- [Hard] Lipit colturi
