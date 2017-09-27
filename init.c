@@ -6,36 +6,13 @@
 #include <pthread.h>
 #include <hiredis/hiredis.h>
 
-#include "tankLevel.h"
-#include "switch.h"
-#include "watering.h"
-#include "toggleButton.h"
-
-#include "external.h"
-#include "notification.h"
-
 #include "main.h"
 
-char *instanceId = "mainframe";
 char *redisHostname = "127.0.0.1";
-
-int ledPinTankFull = 23;
-
-int commandPinTankInputEv = 17;
-int commandPinTankOutputEv = 24;
-
-int ledPinTankInputEvOperation = 18;
-int ledPinTankOutputEvOperation = 25;
-
-int btnPinDrain = 22;
-int btnPinFill = 27;
-
-char switchPins[8] = {26, 16, 13, 12, 6, 5, 1, 0};
-
-pthread_cond_t notificationCond = PTHREAD_COND_INITIALIZER;
-pthread_mutex_t notificationMutex = PTHREAD_MUTEX_INITIALIZER;
-
+int redisPort = 6379;
 int state = LOW;
+
+char *instanceId = "mainframe";
 
 void getCurrentTimeInfo(char *timeString, int bufferSize)
 {
@@ -169,13 +146,13 @@ void initializeDevices(redisContext *c, char *cursor)
 
 int main(void)
 {
-	//Wait for redis to start. Later will be with containers
+	//Wait for redis to start. Later will be with containers and we no longer need this line of code.
 	delay(2000);
 	//Initializes pins as GPIO numbers
 	wiringPiSetupGpio();
-	initializeNotification();
+	initializeRedisPortal();
 
-	redisContext *c = redisConnect(redisHostname, 6379);
+	redisContext *c = redisConnect(redisHostname, redisPort);
 	if (c == NULL || c->err)
 	{
 		if (c)
@@ -193,8 +170,8 @@ int main(void)
 	}
 	redisFree(c);
 
-	initializeExternalHandlers();
-	delay(100);
+	acceptIncommingMessages();
+	
 	printf("[%ld] ConfigurationComplete\n", pthread_self());
 
 	//do some idle work

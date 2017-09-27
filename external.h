@@ -1,1 +1,0 @@
-void initializeExternalHandlers(void);
