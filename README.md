@@ -47,4 +47,3 @@ sudo reboot
 - [Web] Implentare controale (TankLevel)
 - [Web] Autoconnect webSocket
 - [Deploy] Docker pentru Redis
-- [Hard] Taiat geam

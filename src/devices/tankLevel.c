@@ -4,9 +4,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "tankLevel.h"
 #include "main.h"
-#include "notification.h"
+#include "devices.h"
 
 const char *tankLevelJsonFormat =
 	"{ \"id\": \"%s\", \"type\": \"tankLevel\", \"display\":\"%s\", \"location\":\"%s\", \"timeStamp\": \"%s\", \"level\": \"%d\", \"state\": \"%d\" }";
@@ -43,7 +42,7 @@ void sendTankLevelNotification(TankLevelList *tankLevel)
 			tankLevel->level,
 			digitalRead(tankLevel->commandGpio));
 
-	saveAndNotify(tankLevel->deviceId, json);
+	sendMessage(NOTIFICATION, tankLevel->deviceId, json);
 }
 
 void displayTankLevel(TankLevelList *tankLevel)
@@ -113,7 +112,7 @@ void addTankLevel(char *tankLevelId, char *display, char *location, int commandG
 
 }
 
-void triggerTankLevel(char *deviceId)
+int triggerTankLevel(char *deviceId)
 {
 	TankLevelList *current = firstTankLevel;
 
@@ -131,11 +130,13 @@ void triggerTankLevel(char *deviceId)
 			}
 
 			sendTankLevelNotification(current);
-			return;
+			return 1;
 		}
 
 		current = current->next;
 	}
+
+	return 0;
 }
 
 void timerCallbackTankLevel(struct tm *timeinfo)

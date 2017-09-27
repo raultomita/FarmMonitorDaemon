@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 #include "main.h"
-#include "notification.h"
+#include "devices.h"
 
 const char *switchJsonFormat =
 	"{ \"id\": \"%s\", \"type\": \"switch\", \"display\":\"%s\", \"location\":\"%s\", \"timeStamp\": \"%s\", \"state\": \"%d\" }";
@@ -39,11 +39,11 @@ void sendSwitchNotification(SwitchList *switchItem)
 			timeString,
 			digitalRead(switchItem->gpio));
 
-	saveAndNotify(switchItem->deviceId, json);
+	sendMessage(NOTIFICATION, switchItem->deviceId, json);
 	printf("%s notification sent to redis\n", switchItem->deviceId);
 }
 
-void toggleSwitch(char *switchId)
+int toggleSwitch(char *switchId)
 {
 	SwitchList *current = firstSwitch;
 
@@ -53,11 +53,13 @@ void toggleSwitch(char *switchId)
 		{
 			digitalWrite(current->gpio, !digitalRead(current->gpio));
 			sendSwitchNotification(current);
-			return;
+			return 1;
 		}
 
 		current = current->next;
 	}
+
+	return 0;
 }
 
 //Public APIs

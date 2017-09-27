@@ -4,10 +4,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "watering.h"
-#include "tankLevel.h"
-#include "notification.h"
 #include "main.h"
+#include "devices.h"
 
 const char *wateringStateJsonFormat =
 	"{ \"id\": \"%s\", \"type\": \"watering\", \"display\":\"%s\", \"location\":\"%s\", \"timeStamp\":\"%s\", \"state\": \"%d\" }";
@@ -41,7 +39,7 @@ void sendWateringNotification(WateringList *watering)
 			watering->location,
 			timeString,
 			digitalRead(watering->commandGpio));
-	saveAndNotify(watering->deviceId, json);
+			sendMessage(NOTIFICATION, watering->deviceId, json);
 }
 
 void addWatering(char *wateringId, char *display, char *location, int commandGpio, int notifyGpio)
@@ -122,7 +120,7 @@ void timerCallbackWatering(struct tm *timeinfo)
 	}
 }
 
-void triggerWatering(char *deviceId)
+int triggerWatering(char *deviceId)
 {
 	WateringList *current = firstWatering;
 
@@ -139,9 +137,11 @@ void triggerWatering(char *deviceId)
 			digitalWrite(current->notifyGpio, !currentState);
 			sendWateringNotification(current);
 
-			return;
+			return 1;
 		}
 
 		current = current->next;
 	}
+
+	return 0;
 }

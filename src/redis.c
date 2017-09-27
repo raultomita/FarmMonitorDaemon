@@ -12,16 +12,16 @@
 pthread_cond_t notificationCond = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t notificationMutex = PTHREAD_MUTEX_INITIALIZER;
 
-int NotificationsChannel = 1; //= "notifications";
-int CommandsChannel = 2;
-
-void initializeRedis(void)
+void initializeRedisPortal(void)
 {
     pthread_t thread;
-    pthread_create(&thread, NULL, threadHandler_messages, NULL);
+    pthread_create(&thread, NULL, messagesThreadHandler, NULL);
+}
 
-    pthread_t receiveCommandsThread;
-    pthread_create(&receiveCommandsThread, NULL, listenForCommands, NULL);    
+void acceptIncommingMessages(void)
+{
+    pthread_t thread;
+    pthread_create(&thread, NULL, externalCommandsThreadHandler, NULL);    
 }
 
 char *key4save;
@@ -65,11 +65,20 @@ void *messagesThreadHandler(void *threadId)
             pthread_cond_wait(&notificationCond, &notificationMutex);
 
             redisReply *reply;
-            printf("Preparing to save %s with %s", key4save, value4save);
-            reply = redisCommand(c, "HSET devices %s %s", key4save, value4save);
-            freeReplyObject(reply);
-            reply = redisCommand(c, "PUBLISH %s %s",NotificationChannel,  value4save);
-            freeReplyObject(reply);
+            switch(channel){
+                case NOTIFICATION:
+                    printf("Preparing to save %s with %s", key4save, value4save);
+                    reply = redisCommand(c, "HSET devices %s %s", key4save, value4save);
+                    freeReplyObject(reply);
+                    reply = redisCommand(c, "PUBLISH notifications %s", value4save);
+                    freeReplyObject(reply);
+                    break;
+                case COMMAND:
+                    printf("Preparing to send command to %s", key4save);               
+                    reply = redisCommand(c, "PUBLISH commands %s", key4save);
+                    freeReplyObject(reply);
+                    break;
+            }
 
             printf("[%ld] Notification Sent\n", (long)pthread_self());
         }
@@ -80,7 +89,7 @@ void *messagesThreadHandler(void *threadId)
     pthread_exit(NULL);
 }
 
-void *listenForCommands(void *threadId)
+void *externalCommandsThreadHandler(void *threadId)
 {
     signal(SIGPIPE, SIG_IGN);
     struct event_base *base = event_base_new();
@@ -100,12 +109,6 @@ void *listenForCommands(void *threadId)
     pthread_exit(NULL);
 }
 
-
-
-
-
-
-
 void onRedisCommandReceived(redisAsyncContext *c, void *reply, void *privdata)
 {
     redisReply *r = reply;
@@ -119,18 +122,7 @@ void onRedisCommandReceived(redisAsyncContext *c, void *reply, void *privdata)
         {
             if (r->element[j]->str != NULL)
             {
-                if (strncmp("tankLevel", r->element[j]->str, strlen("tankLevel")) == 0)
-                {
-                    triggerTankLevel(r->element[j]->str);
-                }
-                else if (strncmp("switch", r->element[j]->str, strlen("switch")) == 0)
-                {
-                    toggleSwitch(r->element[j]->str);
-                }
-                else if (strncmp("watering", r->element[j]->str, strlen("watering")) == 0)
-                {
-                    triggerWatering(r->element[j]->str);
-                }
+                triggerInternalDevice(r->element[j]->str);                
             }
         }
     }
