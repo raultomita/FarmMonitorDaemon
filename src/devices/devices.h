@@ -1,3 +1,5 @@
+#include <time.h>
+
 //Switch public methods
 void addSwitch(char *switchId, char *display, char *location, int gpio);
 int toggleSwitch(char *switchId);

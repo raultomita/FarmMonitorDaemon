@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "main.h"
+#include "../main.h"
 #include "devices.h"
 
 typedef struct ToggleButton

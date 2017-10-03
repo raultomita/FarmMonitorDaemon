@@ -10,8 +10,8 @@ int triggerInternalDevice(char *deviceMessage);
 void triggerDevice(char *deviceMessage);
 
 //Massages to the other worlds
-#define NOTIFICATION = 1;
-#define COMMAND = 2; 
+#define NOTIFICATION 1
+#define COMMAND 2 
 
 void initializeRedisPortal(void);
 void acceptIncommingMessages(void);

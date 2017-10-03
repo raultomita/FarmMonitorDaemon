@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "main.h"
+#include "../main.h"
 #include "devices.h"
 
 const char *wateringStateJsonFormat =

@@ -9,7 +9,7 @@
 #include "main.h"
 #include "devices/devices.h"
 
-char *redisHostname = "127.0.0.1";
+char *redisHost = "127.0.0.1";
 int redisPort = 6379;
 int state = LOW;
 
@@ -29,7 +29,7 @@ void triggerDevice(char *deviceMessage)
 {
 	int result = triggerInternalDevice(deviceMessage);
 	if(result == 0){
-		sendMessage(COMMAND, deviceMessge, NULL);
+		sendMessage(COMMAND, deviceMessage, NULL);
 	}
 }
 
@@ -182,7 +182,7 @@ int main(void)
 	wiringPiSetupGpio();
 	initializeRedisPortal();
 
-	redisContext *c = redisConnect(redisHostname, redisPort);
+	redisContext *c = redisConnect(redisHost, redisPort);
 	if (c == NULL || c->err)
 	{
 		if (c)

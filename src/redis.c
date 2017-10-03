@@ -12,21 +12,48 @@
 pthread_cond_t notificationCond = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t notificationMutex = PTHREAD_MUTEX_INITIALIZER;
 
-void initializeRedisPortal(void)
-{
-    pthread_t thread;
-    pthread_create(&thread, NULL, messagesThreadHandler, NULL);
-}
-
-void acceptIncommingMessages(void)
-{
-    pthread_t thread;
-    pthread_create(&thread, NULL, externalCommandsThreadHandler, NULL);    
-}
-
 char *key4save;
 char *value4save;
 int channel;
+
+void onRedisConnected(const redisAsyncContext *c, int status)
+{
+    if (status != REDIS_OK)
+    {
+        printf("Error: %s\n", c->errstr);
+        return;
+    }
+    printf("Connected...\n");
+}
+
+void onRedisDisconnected(const redisAsyncContext *c, int status)
+{
+    if (status != REDIS_OK)
+    {
+        printf("Error: %s\n", c->errstr);
+        return;
+    }
+    printf("Disconnected...\n");
+}
+
+void onRedisCommandReceived(redisAsyncContext *c, void *reply, void *privdata)
+{
+    redisReply *r = reply;
+    if (reply == NULL)
+        return;
+    printf("[%ld] Command received\n", (long)pthread_self());
+    if (r->type == REDIS_REPLY_ARRAY)
+    {
+        int j;
+        for (j = 2; j < r->elements; j++)
+        {
+            if (r->element[j]->str != NULL)
+            {
+                triggerInternalDevice(r->element[j]->str);                
+            }
+        }
+    }
+}
 
 void sendMessage(int type, char * key, char * data)
 {
@@ -109,41 +136,14 @@ void *externalCommandsThreadHandler(void *threadId)
     pthread_exit(NULL);
 }
 
-void onRedisCommandReceived(redisAsyncContext *c, void *reply, void *privdata)
+void initializeRedisPortal(void)
 {
-    redisReply *r = reply;
-    if (reply == NULL)
-        return;
-    printf("[%ld] Command received\n", (long)pthread_self());
-    if (r->type == REDIS_REPLY_ARRAY)
-    {
-        int j;
-        for (j = 2; j < r->elements; j++)
-        {
-            if (r->element[j]->str != NULL)
-            {
-                triggerInternalDevice(r->element[j]->str);                
-            }
-        }
-    }
+    pthread_t thread;
+    pthread_create(&thread, NULL, messagesThreadHandler, NULL);
 }
 
-void onRedisConnected(const redisAsyncContext *c, int status)
+void acceptIncommingMessages(void)
 {
-    if (status != REDIS_OK)
-    {
-        printf("Error: %s\n", c->errstr);
-        return;
-    }
-    printf("Connected...\n");
-}
-
-void onRedisDisconnected(const redisAsyncContext *c, int status)
-{
-    if (status != REDIS_OK)
-    {
-        printf("Error: %s\n", c->errstr);
-        return;
-    }
-    printf("Disconnected...\n");
+    pthread_t thread;
+    pthread_create(&thread, NULL, externalCommandsThreadHandler, NULL);    
 }
