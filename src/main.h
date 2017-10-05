@@ -5,6 +5,7 @@ extern char* redisHost;
 extern int redisPort;
 extern int state;
 
+char* getDeviceState(char *deviceId);
 void getCurrentTimeInfo(char *timeString, int bufferSize);
 int triggerInternalDevice(char *deviceMessage);
 void triggerDevice(char *deviceMessage);
