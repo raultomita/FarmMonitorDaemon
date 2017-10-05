@@ -16,6 +16,27 @@ char *key4save;
 char *value4save;
 int channel;
 
+char* getDeviceState(char *deviceId){
+    redisContext *c = redisConnect(redisHost, redisPort);
+    if (c == NULL || c->err)
+    {
+        if (c)
+        {
+            printf("Error in listening for notifications: %s\n", c->errstr);
+        }
+        else
+        {
+            printf("Can't allocate redis context\n");
+        }
+    }
+    else
+    {
+	    redisReply *r = redisCommand(c, "HGET %s state", deviceId);
+	    return r->str;
+    }
+	return NULL;
+}
+
 void onRedisConnected(const redisAsyncContext *c, int status)
 {
     if (status != REDIS_OK)
