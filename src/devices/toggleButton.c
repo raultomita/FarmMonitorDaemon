@@ -25,6 +25,7 @@ void toggleTargetDeviceId(int pinNumber)
 		return;
 
 	printf("toggle pin number %d with value %d\n", pinNumber, digitalRead(pinNumber));
+
 	ToggleButtonList *current = firstToggleButton;
 	while (current != NULL)
 	{
@@ -58,7 +59,11 @@ void setNightWithness(char *targetDeviceId){
 	{
 		if (strcmp(current->targetDeviceId, targetDeviceId) == 0)
 		{
-			digitalWrite(current->ledGpio, !digitalRead(current->ledGpio));
+			if(strcmp(getDeviceState(current->targetDeviceId), "0") == 0){
+			digitalWrite(current->ledGpio, HIGH);
+			}
+			else{digitalWrite(current->ledGpio, LOW);}
+			
 		}
 		current = current->next;
 	}
