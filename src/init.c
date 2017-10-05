@@ -41,6 +41,7 @@ int triggerInternalDevice(char *deviceMessage)
 	}
 	else if (strncmp("switch", deviceMessage, strlen("switch")) == 0)
 	{
+		setNightWithness(deviceMessage);
 		return toggleSwitch(deviceMessage);
 	}
 	else if (strncmp("watering", deviceMessage, strlen("watering")) == 0)
@@ -88,7 +89,7 @@ void initializeSwitch(char *deviceId, redisReply *r)
 {
 	printf("Init switch with id %s\n", deviceId);
 
-	if (r->elements == 8 && strcmp(r->element[6]->str, "gpio") == 0)
+	if (r->elements == 10 && strcmp(r->element[6]->str, "gpio") == 0)
 	{
 		addSwitch(deviceId, r->element[3]->str, r->element[5]->str, strtoimax(r->element[7]->str, NULL, 10));
 	}
@@ -122,9 +123,9 @@ void initializeToggleButton(char *deviceId, redisReply *r)
 {
 	printf("Init toggle button with id %s\n", deviceId);
 
-	if (r->elements == 6 && strcmp(r->element[2]->str, "gpio") == 0 && strcmp(r->element[4]->str, "targetDeviceId") == 0)
+	if (r->elements == 8 && strcmp(r->element[2]->str, "gpio") == 0 && strcmp(r->element[4]->str, "targetDeviceId") == 0)
 	{
-		addToggleButton(deviceId, strtoimax(r->element[3]->str, NULL, 10), r->element[5]->str);
+		addToggleButton(deviceId, strtoimax(r->element[3]->str, NULL, 10), strtoimax(r->element[7]->str, NULL, 10), r->element[5]->str);
 	}
 }
 
@@ -181,7 +182,7 @@ int main(void)
 	//Initializes pins as GPIO numbers
 	wiringPiSetupGpio();
 	initializeRedisPortal();
-
+delay(1000);
 	redisContext *c = redisConnect(redisHost, redisPort);
 	if (c == NULL || c->err)
 	{

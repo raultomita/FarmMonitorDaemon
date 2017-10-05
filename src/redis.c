@@ -70,6 +70,7 @@ void sendMessage(int type, char * key, char * data)
 
 void *messagesThreadHandler(void *threadId)
 {
+  printf("start portal thread\n");
     redisContext *c = redisConnect(redisHost, redisPort);
     if (c == NULL || c->err)
     {
@@ -105,6 +106,12 @@ void *messagesThreadHandler(void *threadId)
                     reply = redisCommand(c, "PUBLISH commands %s", key4save);
                     freeReplyObject(reply);
                     break;
+		case SAVESTATE:
+                    printf("Preparing to save state to %s", key4save);               
+                    reply = redisCommand(c, "HSET %s state %s", key4save, value4save);
+                    freeReplyObject(reply);
+                    break;
+		    
             }
 
             printf("[%ld] Notification Sent\n", (long)pthread_self());

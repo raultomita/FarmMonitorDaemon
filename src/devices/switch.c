@@ -38,9 +38,15 @@ void sendSwitchNotification(SwitchList *switchItem)
 			switchItem->location,
 			timeString,
 			digitalRead(switchItem->gpio));
+        char switchState[1];
+	sprintf(switchState, "%d", digitalRead(switchItem->gpio));
+	printf("%s notification sending to redis\n", switchItem->deviceId);
 
 	sendMessage(NOTIFICATION, switchItem->deviceId, json);
+
+	sendMessage(SAVESTATE, switchItem->deviceId, switchState);
 	printf("%s notification sent to redis\n", switchItem->deviceId);
+
 }
 
 int toggleSwitch(char *switchId)

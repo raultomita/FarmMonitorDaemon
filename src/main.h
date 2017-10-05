@@ -12,6 +12,7 @@ void triggerDevice(char *deviceMessage);
 //Massages to the other worlds
 #define NOTIFICATION 1
 #define COMMAND 2 
+#define SAVESTATE 3
 
 void initializeRedisPortal(void);
 void acceptIncommingMessages(void);

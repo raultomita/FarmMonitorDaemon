@@ -11,6 +11,7 @@ typedef struct ToggleButton
 {
 	char *deviceId;
 	int gpio;
+	int ledGpio;
 	char *targetDeviceId;
 	time_t lastTriggerTime;
 
@@ -50,7 +51,20 @@ void toggleTargetDeviceId(int pinNumber)
 	}
 }
 
-void addToggleButton(char *toggleButtonId, int gpio, char *targetDeviceId)
+void setNightWithness(char *targetDeviceId){
+	
+	ToggleButtonList *current = firstToggleButton;
+	while (current != NULL)
+	{
+		if (strcmp(current->targetDeviceId, targetDeviceId) == 0)
+		{
+			digitalWrite(current->ledGpio, !digitalRead(current->ledGpio));
+		}
+		current = current->next;
+	}
+}
+
+void addToggleButton(char *toggleButtonId, int gpio, int ledGpio, char *targetDeviceId)
 {
 	ToggleButtonList *newDevice = malloc(sizeof(ToggleButtonList));
 	newDevice->deviceId = malloc(strlen(toggleButtonId) * sizeof(char));
@@ -60,6 +74,7 @@ void addToggleButton(char *toggleButtonId, int gpio, char *targetDeviceId)
 	strcpy(newDevice->targetDeviceId, targetDeviceId);
 
 	newDevice->gpio = gpio;
+	newDevice->ledGpio = ledGpio;
 
 	if (firstToggleButton == NULL)
 	{
@@ -73,6 +88,7 @@ void addToggleButton(char *toggleButtonId, int gpio, char *targetDeviceId)
 	}
 
 	pinMode(newDevice->gpio, INPUT);
+	pinMode(newDevice->ledGpio, OUTPUT);
 	pullUpDnControl(newDevice->gpio, PUD_UP);
 	printf("Gpio for button: %d\n", newDevice->gpio);
 	wiringPiISR(newDevice->gpio, INT_EDGE_RISING, &toggleTargetDeviceId);
