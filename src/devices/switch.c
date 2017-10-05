@@ -38,12 +38,12 @@ void sendSwitchNotification(SwitchList *switchItem)
 			switchItem->location,
 			timeString,
 			digitalRead(switchItem->gpio));
-        char switchState[1];
+        char *switchState = (char *) malloc(sizeof(char));
 	sprintf(switchState, "%d", digitalRead(switchItem->gpio));
+printf("%d translated as %s\n", digitalRead(switchItem->gpio), switchState);
 	printf("%s notification sending to redis\n", switchItem->deviceId);
 
 	sendMessage(NOTIFICATION, switchItem->deviceId, json);
-
 	sendMessage(SAVESTATE, switchItem->deviceId, switchState);
 	printf("%s notification sent to redis\n", switchItem->deviceId);
 

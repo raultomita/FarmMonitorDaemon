@@ -59,10 +59,12 @@ void setNightWithness(char *targetDeviceId){
 	{
 		if (strcmp(current->targetDeviceId, targetDeviceId) == 0)
 		{
+printf("led should be notified after this step %s and state %s\n", current->targetDeviceId, getDeviceState(current->targetDeviceId));
 			if(strcmp(getDeviceState(current->targetDeviceId), "0") == 0){
 			digitalWrite(current->ledGpio, HIGH);
 			}
 			else{digitalWrite(current->ledGpio, LOW);}
+printf("led should be notified already\n");
 			
 		}
 		current = current->next;

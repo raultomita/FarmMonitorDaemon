@@ -41,8 +41,9 @@ int triggerInternalDevice(char *deviceMessage)
 	}
 	else if (strncmp("switch", deviceMessage, strlen("switch")) == 0)
 	{
+		int result = toggleSwitch(deviceMessage);
 		setNightWithness(deviceMessage);
-		return toggleSwitch(deviceMessage);
+		return result;
 	}
 	else if (strncmp("watering", deviceMessage, strlen("watering")) == 0)
 	{
