@@ -9,14 +9,12 @@
 
 #include "main.h"
 
-pthread_cond_t notificationCond = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t notificationMutex = PTHREAD_MUTEX_INITIALIZER;
 
-char *key4save;
-char *value4save;
-int channel;
+redisContext *c;
 
-char* getDeviceState(char *deviceId){
+char *getDeviceState(char *deviceId)
+{
     redisContext *c = redisConnect(redisHost, redisPort);
     if (c == NULL || c->err)
     {
@@ -31,10 +29,10 @@ char* getDeviceState(char *deviceId){
     }
     else
     {
-	    redisReply *r = redisCommand(c, "HGET %s state", deviceId);
-	    return r->str;
+        redisReply *r = redisCommand(c, "HGET %s state", deviceId);
+        return r->str;
     }
-	return NULL;
+    return NULL;
 }
 
 void onRedisConnected(const redisAsyncContext *c, int status)
@@ -70,78 +68,40 @@ void onRedisCommandReceived(redisAsyncContext *c, void *reply, void *privdata)
         {
             if (r->element[j]->str != NULL)
             {
-                triggerInternalDevice(r->element[j]->str);                
+                triggerInternalDevice(r->element[j]->str);
             }
         }
     }
 }
 
-void sendMessage(int type, char * key, char * data)
+void sendMessage(int type, char *key, char *data)
 {
-    printf("[%ld] Ready to send a message through portal\n", (long)pthread_self());
+    printf("[%ld] Aquiring lock in order to send notifications\n", (long)pthread_self());
     pthread_mutex_lock(&notificationMutex);
 
-    channel = type;
-    key4save = key;
-    value4save = data;
+    redisReply *reply;
+    switch (channel)
+    {
+        case NOTIFICATION:
+            printf("Preparing to save %s with %s", key4save, value4save);
+            reply = redisCommand(c, "HSET devices %s %s", key4save, value4save);
+            freeReplyObject(reply);
+            reply = redisCommand(c, "PUBLISH notifications %s", value4save);
+            freeReplyObject(reply);
+            break;
+        case COMMAND:
+            printf("Preparing to send command to %s", key4save);
+            reply = redisCommand(c, "PUBLISH commands %s", key4save);
+            freeReplyObject(reply);
+            break;
+        case SAVESTATE:
+            printf("Preparing to save state to %s", key4save);
+            reply = redisCommand(c, "HSET %s state %s", key4save, value4save);
+            freeReplyObject(reply);
+            break;
+    }
 
-    pthread_cond_signal(&notificationCond);
     pthread_mutex_unlock(&notificationMutex);
-}
-
-void *messagesThreadHandler(void *threadId)
-{
-  printf("start portal thread\n");
-    redisContext *c = redisConnect(redisHost, redisPort);
-    if (c == NULL || c->err)
-    {
-        if (c)
-        {
-            printf("Error in listening for notifications: %s\n", c->errstr);
-        }
-        else
-        {
-            printf("Can't allocate redis context\n");
-        }
-    }
-    else
-    {
-        printf("[%ld] Listening fo notifications\n", (long)pthread_self());
-        pthread_mutex_lock(&notificationMutex);
-
-        while (1)
-        {
-            pthread_cond_wait(&notificationCond, &notificationMutex);
-
-            redisReply *reply;
-            switch(channel){
-                case NOTIFICATION:
-                    printf("Preparing to save %s with %s", key4save, value4save);
-                    reply = redisCommand(c, "HSET devices %s %s", key4save, value4save);
-                    freeReplyObject(reply);
-                    reply = redisCommand(c, "PUBLISH notifications %s", value4save);
-                    freeReplyObject(reply);
-                    break;
-                case COMMAND:
-                    printf("Preparing to send command to %s", key4save);               
-                    reply = redisCommand(c, "PUBLISH commands %s", key4save);
-                    freeReplyObject(reply);
-                    break;
-		case SAVESTATE:
-                    printf("Preparing to save state to %s", key4save);               
-                    reply = redisCommand(c, "HSET %s state %s", key4save, value4save);
-                    freeReplyObject(reply);
-                    break;
-		    
-            }
-
-            printf("[%ld] Notification Sent\n", (long)pthread_self());
-        }
-        pthread_mutex_unlock(&notificationMutex);
-    }
-
-    redisFree(c);
-    pthread_exit(NULL);
 }
 
 void *externalCommandsThreadHandler(void *threadId)
@@ -166,12 +126,25 @@ void *externalCommandsThreadHandler(void *threadId)
 
 void initializeRedisPortal(void)
 {
-    pthread_t thread;
-    pthread_create(&thread, NULL, messagesThreadHandler, NULL);
+    globalContext = redisConnect(redisHost, redisPort);
+
+    if (c == NULL || c->err)
+    {
+        if (c)
+        {
+            printf("Error in listening for notifications: %s\n", c->errstr);
+        }
+        else
+        {
+            printf("Can't allocate redis context\n");
+        }
+
+        globalContext = NULL;
+    }
 }
 
 void acceptIncommingMessages(void)
 {
     pthread_t thread;
-    pthread_create(&thread, NULL, externalCommandsThreadHandler, NULL);    
+    pthread_create(&thread, NULL, externalCommandsThreadHandler, NULL);
 }
