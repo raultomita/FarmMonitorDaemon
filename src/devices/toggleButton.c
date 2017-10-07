@@ -13,9 +13,9 @@ typedef struct ToggleButton
 	int gpio;
 	int ledGpio;
 	char *targetDeviceId;
-	time_t lastTriggerTime;
-
 	struct ToggleButton *next;
+	long lastTriggerTime;
+
 } ToggleButtonList;
 ToggleButtonList *firstToggleButton, *lastToggleButton;
 
@@ -33,15 +33,15 @@ void toggleTargetDeviceId(int pinNumber)
 		{
 			time_t rawtime;
 			time(&rawtime);
-			double differenceInSec = difftime(rawtime, current->lastTriggerTime);
-			printf("difference is %f\n", differenceInSec);
+			long differenceInSec = (long)rawtime - current->lastTriggerTime;
+			printf("difference is %ld\n", differenceInSec);
 
-			if (differenceInSec <= 1)
+			if (differenceInSec < 1)
 			{
 				return;
 			}
 
-			current->lastTriggerTime = rawtime;
+			current->lastTriggerTime = (long)rawtime;
 
 			printf("toggleDeficeId %s\n", current->deviceId);
 
@@ -57,6 +57,7 @@ void setNightWithness(char *targetDeviceId){
 	ToggleButtonList *current = firstToggleButton;
 	while (current != NULL)
 	{
+printf("Enter again %d\n", current!= NULL);
 		if (strcmp(current->targetDeviceId, targetDeviceId) == 0)
 		{
 printf("led should be notified after this step %s and state %s\n", current->targetDeviceId, getDeviceState(current->targetDeviceId));
@@ -67,8 +68,11 @@ printf("led should be notified after this step %s and state %s\n", current->targ
 printf("led should be notified already\n");
 			
 		}
+printf("finish night withness sensor %s\n", current->deviceId);
+printf("next toggle %d\n", current->next != NULL);
 		current = current->next;
 	}
+printf("finish night withness\n");
 }
 
 void addToggleButton(char *toggleButtonId, int gpio, int ledGpio, char *targetDeviceId)
@@ -94,6 +98,7 @@ void addToggleButton(char *toggleButtonId, int gpio, int ledGpio, char *targetDe
 		lastToggleButton = newDevice;
 	}
 
+	newDevice->next = NULL;
 	pinMode(newDevice->gpio, INPUT);
 	pinMode(newDevice->ledGpio, OUTPUT);
 	pullUpDnControl(newDevice->gpio, PUD_UP);

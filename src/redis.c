@@ -11,7 +11,7 @@
 
 pthread_mutex_t notificationMutex = PTHREAD_MUTEX_INITIALIZER;
 
-redisContext *c;
+redisContext *globalContext;
 
 char *getDeviceState(char *deviceId)
 {
@@ -74,7 +74,7 @@ void onRedisCommandReceived(redisAsyncContext *c, void *reply, void *privdata)
     }
 }
 
-void sendMessage(int type, char *key, char *data)
+void sendMessage(int channel, char *key, char *data)
 {
     printf("[%ld] Aquiring lock in order to send notifications\n", (long)pthread_self());
     pthread_mutex_lock(&notificationMutex);
@@ -83,20 +83,20 @@ void sendMessage(int type, char *key, char *data)
     switch (channel)
     {
         case NOTIFICATION:
-            printf("Preparing to save %s with %s", key4save, value4save);
-            reply = redisCommand(c, "HSET devices %s %s", key4save, value4save);
+            printf("Preparing to save %s with %s", key, data);
+            reply = redisCommand(globalContext, "HSET devices %s %s", key, data);
             freeReplyObject(reply);
-            reply = redisCommand(c, "PUBLISH notifications %s", value4save);
+            reply = redisCommand(globalContext, "PUBLISH notifications %s", data);
             freeReplyObject(reply);
             break;
         case COMMAND:
-            printf("Preparing to send command to %s", key4save);
-            reply = redisCommand(c, "PUBLISH commands %s", key4save);
+            printf("Preparing to send command to %s", key);
+            reply = redisCommand(globalContext, "PUBLISH commands %s", key);
             freeReplyObject(reply);
             break;
         case SAVESTATE:
-            printf("Preparing to save state to %s", key4save);
-            reply = redisCommand(c, "HSET %s state %s", key4save, value4save);
+            printf("Preparing to save state to %s", key);
+            reply = redisCommand(globalContext, "HSET %s state %s", key, data);
             freeReplyObject(reply);
             break;
     }
@@ -128,11 +128,11 @@ void initializeRedisPortal(void)
 {
     globalContext = redisConnect(redisHost, redisPort);
 
-    if (c == NULL || c->err)
+    if (globalContext == NULL || globalContext->err)
     {
-        if (c)
+        if (globalContext)
         {
-            printf("Error in listening for notifications: %s\n", c->errstr);
+            printf("Error in listening for notifications: %s\n", globalContext->errstr);
         }
         else
         {

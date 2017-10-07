@@ -17,4 +17,4 @@ void triggerDevice(char *deviceMessage);
 
 void initializeRedisPortal(void);
 void acceptIncommingMessages(void);
-void sendMessage(int type, char * key, char * data);
+void sendMessage(int channel, char * key, char * data);
