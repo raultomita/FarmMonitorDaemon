@@ -22,13 +22,13 @@ void getCurrentTimeInfo(char *timeString, int bufferSize)
 	time(&rawTime);
 	timeInfo = localtime(&rawTime);
 	strftime(timeString, bufferSize, "%x %X", timeInfo);
-	printf("%s\n", timeString);
 }
 
 void triggerDevice(char *deviceMessage)
 {
 	int result = triggerInternalDevice(deviceMessage);
-	if(result == 0){
+	if (result == 0)
+	{
 		sendMessage(COMMAND, deviceMessage, NULL);
 	}
 }
@@ -50,14 +50,14 @@ int triggerInternalDevice(char *deviceMessage)
 		return triggerWatering(deviceMessage);
 	}
 
-	return 2;//not supported
+	return 2; //not supported
 }
 
 int isInstanceQueryResultValid(redisReply *r)
 {
 	if (r->type != REDIS_REPLY_ARRAY)
 	{
-		printf("Response for SSCAN is not an array\n");
+		logError("Response for SSCAN is not an array");
 		return 0;
 	}
 
@@ -66,15 +66,15 @@ int isInstanceQueryResultValid(redisReply *r)
 		int i = 0;
 		for (i = 0; i < r->elements; i++)
 		{
-			printf("element type %d\n", r->element[i]->type);
+			logError("element type %d", r->element[i]->type);
 		}
-		printf("Array does not contains two elements\n");
+		logError("Array does not contains two elements");
 		return 0;
 	}
 
 	if (r->element[1] == NULL || r->element[1]->type != REDIS_REPLY_ARRAY)
 	{
-		printf("Second element from SSCAN is not an array with device ids\n");
+		logError("Second element from SSCAN is not an array with device ids");
 		return 0;
 	}
 
@@ -88,7 +88,7 @@ int stilExistItems(redisReply *r)
 
 void initializeSwitch(char *deviceId, redisReply *r)
 {
-	printf("Init switch with id %s\n", deviceId);
+	logInfo("Init switch with id %s", deviceId);
 
 	if (r->elements == 10 && strcmp(r->element[6]->str, "gpio") == 0)
 	{
@@ -98,7 +98,7 @@ void initializeSwitch(char *deviceId, redisReply *r)
 
 void initializeTankLevel(char *deviceId, redisReply *r)
 {
-	printf("Init switch with id %s\n", deviceId);
+	logInfo("Init switch with id %s", deviceId);
 
 	if (r->elements == 12 && strcmp(r->element[6]->str, "commandGpio") == 0 &&
 		strcmp(r->element[8]->str, "notifyGpio") == 0 && strcmp(r->element[10]->str, "levelGpio") == 0)
@@ -112,7 +112,7 @@ void initializeTankLevel(char *deviceId, redisReply *r)
 
 void initializeWatering(char *deviceId, redisReply *r)
 {
-	printf("Init watering with id %s\n", deviceId);
+	logInfo("Init watering with id %s", deviceId);
 
 	if (r->elements == 10 && strcmp(r->element[6]->str, "commandGpio") == 0 && strcmp(r->element[8]->str, "notifyGpio") == 0)
 	{
@@ -122,7 +122,7 @@ void initializeWatering(char *deviceId, redisReply *r)
 
 void initializeToggleButton(char *deviceId, redisReply *r)
 {
-	printf("Init toggle button with id %s\n", deviceId);
+	logInfo("Init toggle button with id %s", deviceId);
 
 	if (r->elements == 8 && strcmp(r->element[2]->str, "gpio") == 0 && strcmp(r->element[4]->str, "targetDeviceId") == 0)
 	{
@@ -132,7 +132,7 @@ void initializeToggleButton(char *deviceId, redisReply *r)
 
 void initializeDevices(redisContext *c, char *cursor)
 {
-	printf("Query for device ids for cursor %s\n", cursor);
+	logInfo("Query for device ids for cursor %s", cursor);
 
 	redisReply *r = redisCommand(c, "SSCAN %s %s", instanceId, cursor);
 
@@ -183,17 +183,17 @@ int main(void)
 	//Initializes pins as GPIO numbers
 	wiringPiSetupGpio();
 	initializeRedisPortal();
-delay(1000);
+	delay(1000);
 	redisContext *c = redisConnect(redisHost, redisPort);
 	if (c == NULL || c->err)
 	{
 		if (c)
 		{
-			printf("Error in initializing devices: %s\n", c->errstr);
+			logError("Error in initializing devices: %s", c->errstr);
 		}
 		else
 		{
-			printf("Can't allocate redis context in initializing devices\n");
+			logError("Can't allocate redis context in initializing devices");
 		}
 	}
 	else
@@ -219,7 +219,7 @@ delay(1000);
 
 		timerCallbackWatering(timeInfo);
 		timerCallbackTankLevel(timeInfo);
-		
+
 		delay(1000);
 	}
 	return 0;

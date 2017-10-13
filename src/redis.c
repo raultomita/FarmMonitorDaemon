@@ -15,44 +15,59 @@ redisContext *globalContext;
 
 char *getDeviceState(char *deviceId)
 {
-    redisContext *c = redisConnect(redisHost, redisPort);
-    if (c == NULL || c->err)
+    redisContext *deviceStateContext = createSyncRedisConnection();
+
+    if (deviceStateContext == NULL)
     {
-        if (c)
-        {
-            printf("Error in listening for notifications: %s\n", c->errstr);
-        }
-        else
-        {
-            printf("Can't allocate redis context\n");
-        }
+        logError("DeviceStateContext is null");
+        return NULL;
     }
-    else
-    {
-        redisReply *r = redisCommand(c, "HGET %s state", deviceId);
-        return r->str;
-    }
-    return NULL;
+
+    redisReply *r = redisCommand(deviceStateContext, "HGET %s state", deviceId);
+    freeReplyObject(r);
+    redisFree(deviceStateContext);
+    return r->str;
 }
 
 void onRedisConnected(const redisAsyncContext *c, int status)
 {
     if (status != REDIS_OK)
     {
-        printf("Error: %s\n", c->errstr);
+        logError("On redis async connecting: %s", c->errstr);
         return;
     }
-    printf("Connected...\n");
+    loginfo("Redis async connected");
 }
 
 void onRedisDisconnected(const redisAsyncContext *c, int status)
 {
     if (status != REDIS_OK)
     {
-        printf("Error: %s\n", c->errstr);
+        logError("Redis async disconnecting: %s", c->errstr);
         return;
     }
-    printf("Disconnected...\n");
+    logInfo("Redis async disconnected");
+}
+
+redisContext *createSyncRedisConnection()
+{
+    redisContext *c = redisConnect(redisHost, redisPort);
+    if (c == NULL || c->err)
+    {
+        if (c)
+        {
+            logError("Error in initializing redis sync connection: %s", c->errstr);
+        }
+        else
+        {
+            logError("Can't allocate redis context");
+        }
+    }
+    else
+    {
+        return c;
+    }
+    return NULL;
 }
 
 void onRedisCommandReceived(redisAsyncContext *c, void *reply, void *privdata)
@@ -60,9 +75,10 @@ void onRedisCommandReceived(redisAsyncContext *c, void *reply, void *privdata)
     redisReply *r = reply;
     if (reply == NULL)
         return;
-    printf("[%ld] Command received\n", (long)pthread_self());
+
     if (r->type == REDIS_REPLY_ARRAY)
     {
+        logInfo("[Input] Command received");
         int j;
         for (j = 2; j < r->elements; j++)
         {
@@ -76,29 +92,38 @@ void onRedisCommandReceived(redisAsyncContext *c, void *reply, void *privdata)
 
 void sendMessage(int channel, char *key, char *data)
 {
-    printf("[%ld] Aquiring lock in order to send notifications\n", (long)pthread_self());
+    if (globalContext == NULL)
+    {
+        logError("[Portal] GlobalContext is null");
+        return;
+    }
+
+    logInfo("[Portal] Aquiring lock in order to send message");
     pthread_mutex_lock(&notificationMutex);
 
     redisReply *reply;
     switch (channel)
     {
-        case NOTIFICATION:
-            printf("Preparing to save %s with %s", key, data);
-            reply = redisCommand(globalContext, "HSET devices %s %s", key, data);
-            freeReplyObject(reply);
-            reply = redisCommand(globalContext, "PUBLISH notifications %s", data);
-            freeReplyObject(reply);
-            break;
-        case COMMAND:
-            printf("Preparing to send command to %s", key);
-            reply = redisCommand(globalContext, "PUBLISH commands %s", key);
-            freeReplyObject(reply);
-            break;
-        case SAVESTATE:
-            printf("Preparing to save state to %s", key);
-            reply = redisCommand(globalContext, "HSET %s state %s", key, data);
-            freeReplyObject(reply);
-            break;
+    case NOTIFICATION:
+        logInfo("[Portal] Save notification %s in devices and publish", key);
+        reply = redisCommand(globalContext, "HSET devices %s %s", key, data);
+        freeReplyObject(reply);
+        reply = redisCommand(globalContext, "PUBLISH notifications %s", data);
+        freeReplyObject(reply);
+        logInfo("[Portal] Notification sent to %s", key);
+        break;
+    case COMMAND:
+        loginfo("[Portal] Send command to %s", key);
+        reply = redisCommand(globalContext, "PUBLISH commands %s", key);
+        freeReplyObject(reply);
+        logInfo("[Portal] Command sent to %s", key);
+        break;
+    case SAVESTATE:
+        loginfo("[Portal] Save state to %s", key);
+        reply = redisCommand(globalContext, "HSET %s state %s", key, data);
+        freeReplyObject(reply);
+        loginfo("[Portal] State saved to %s", key);
+        break;
     }
 
     pthread_mutex_unlock(&notificationMutex);
@@ -109,38 +134,24 @@ void *externalCommandsThreadHandler(void *threadId)
     signal(SIGPIPE, SIG_IGN);
     struct event_base *base = event_base_new();
 
-    redisAsyncContext *c = redisAsyncConnect("127.0.0.1", 6379);
+    redisAsyncContext *c = redisAsyncConnect(redisHost, redisPort);
     if (c->err)
     {
-        printf("error: %s\n", c->errstr);
+        logError("[Input] Redis thread handler error: %s", c->errstr);
     }
 
     redisLibeventAttach(c, base);
     redisAsyncSetConnectCallback(c, onRedisConnected);
     redisAsyncSetDisconnectCallback(c, onRedisDisconnected);
     redisAsyncCommand(c, onRedisCommandReceived, NULL, "SUBSCRIBE commands");
-    printf("[%ld]: Subscribed to commands channel\n", (long)pthread_self());
+    logInfo("[Input] Subscribed to commands channel");
     event_base_dispatch(base);
     pthread_exit(NULL);
 }
 
 void initializeRedisPortal(void)
 {
-    globalContext = redisConnect(redisHost, redisPort);
-
-    if (globalContext == NULL || globalContext->err)
-    {
-        if (globalContext)
-        {
-            printf("Error in listening for notifications: %s\n", globalContext->errstr);
-        }
-        else
-        {
-            printf("Can't allocate redis context\n");
-        }
-
-        globalContext = NULL;
-    }
+    globalContext = createSyncRedisConnection();
 }
 
 void acceptIncommingMessages(void)

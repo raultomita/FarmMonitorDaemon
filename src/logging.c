@@ -6,20 +6,27 @@
 
 #include "main.h"
 
-const char * infoLogFormat = "INFO  [%ld] %s\n";
+const char *infoLogFormat = "INF [%ld] %s\n";
+const char *errorLogFormat = "ERR [%ld] %s\n";
 
-int logInfo (const char * format, ... )
+void logInfo(const char *format, ...)
 {
-    char *message = (char *)malloc((strlen(infoLogFormat) + 12 + strlen(format)) * sizeof(char));
+    char *message = (char *)malloc((strlen(infoLogFormat) + 19 + strlen(format)) * sizeof(char));
+    sprintf(message, infoLogFormat, (long)pthread_self(), format);
+
     va_list args;
     va_start(args, format);
-    sprintf(message, infoLogFormat,  (long)pthread_self(), format);
-    int result =  printf(message, args);
+    int result = printf(message, args);
     va_end(args);
-    return result;
 }
 
-int logError (const char * format, ... )
+void logError(const char *format, ...)
 {
-return 0;
+    char *message = (char *)malloc((strlen(errorLogFormat) + 19 + strlen(format)) * sizeof(char));
+    sprintf(message, errorLogFormat, pthread_self(), format);
+
+    va_list args;
+    va_start(args, format);
+    int result = printf(message, args);
+    va_end(args);
 }
