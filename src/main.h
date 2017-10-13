@@ -20,5 +20,5 @@ void acceptIncommingMessages(void);
 void sendMessage(int channel, char * key, char * data);
 
 //Diagnostic && Logging
-int logInfo (const char * format, ... );
-int logError (const char * format, ... );
+void logInfo (const char * format, ... );
+void logError (const char * format, ... );

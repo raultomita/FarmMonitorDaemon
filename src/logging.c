@@ -16,7 +16,7 @@ void logInfo(const char *format, ...)
 
     va_list args;
     va_start(args, format);
-    int result = printf(message, args);
+    printf(message, args);
     va_end(args);
 }
 
@@ -27,6 +27,6 @@ void logError(const char *format, ...)
 
     va_list args;
     va_start(args, format);
-    int result = printf(message, args);
+    printf(message, args);
     va_end(args);
 }
