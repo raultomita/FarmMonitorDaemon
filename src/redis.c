@@ -20,7 +20,7 @@ void onRedisConnected(const redisAsyncContext *c, int status)
         logError("On redis async connecting: %s", c->errstr);
         return;
     }
-    loginfo("Redis async connected");
+    logInfo("Redis async connected");
 }
 
 void onRedisDisconnected(const redisAsyncContext *c, int status)
@@ -113,16 +113,16 @@ void sendMessage(int channel, char *key, char *data)
         logInfo("[Portal] Notification sent to %s", key);
         break;
     case COMMAND:
-        loginfo("[Portal] Send command to %s", key);
+        logInfo("[Portal] Send command to %s", key);
         reply = redisCommand(globalContext, "PUBLISH commands %s", key);
         freeReplyObject(reply);
         logInfo("[Portal] Command sent to %s", key);
         break;
     case SAVESTATE:
-        loginfo("[Portal] Save state to %s", key);
+        logInfo("[Portal] Save state to %s", key);
         reply = redisCommand(globalContext, "HSET %s state %s", key, data);
         freeReplyObject(reply);
-        loginfo("[Portal] State saved to %s", key);
+        logInfo("[Portal] State saved to %s", key);
         break;
     }
 
