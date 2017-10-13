@@ -52,27 +52,31 @@ void toggleTargetDeviceId(int pinNumber)
 	}
 }
 
-void setNightWithness(char *targetDeviceId){
-	
+void setNightWithness(char *targetDeviceId)
+{
+
 	ToggleButtonList *current = firstToggleButton;
 	while (current != NULL)
 	{
-printf("Enter again %d\n", current!= NULL);
+		printf("Enter again %d\n", current != NULL);
 		if (strcmp(current->targetDeviceId, targetDeviceId) == 0)
 		{
-printf("led should be notified after this step %s and state %s\n", current->targetDeviceId, getDeviceState(current->targetDeviceId));
-			if(strcmp(getDeviceState(current->targetDeviceId), "0") == 0){
-			digitalWrite(current->ledGpio, HIGH);
+			printf("led should be notified after this step %s and state %s\n", current->targetDeviceId, getDeviceState(current->targetDeviceId));
+			if (strcmp(getDeviceState(current->targetDeviceId), "0") == 0)
+			{
+				digitalWrite(current->ledGpio, HIGH);
 			}
-			else{digitalWrite(current->ledGpio, LOW);}
-printf("led should be notified already\n");
-			
+			else
+			{
+				digitalWrite(current->ledGpio, LOW);
+			}
+			printf("led should be notified already\n");
 		}
-printf("finish night withness sensor %s\n", current->deviceId);
-printf("next toggle %d\n", current->next != NULL);
+		printf("finish night withness sensor %s\n", current->deviceId);
+		printf("next toggle %d\n", current->next != NULL);
 		current = current->next;
 	}
-printf("finish night withness\n");
+	printf("finish night withness\n");
 }
 
 void addToggleButton(char *toggleButtonId, int gpio, int ledGpio, char *targetDeviceId)

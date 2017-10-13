@@ -9,7 +9,7 @@
 #include "main.h"
 #include "devices/devices.h"
 
-char *redisHost = "127.0.0.1";
+char *redisHost = "192.168.1.200";
 int redisPort = 6379;
 int state = LOW;
 
@@ -204,7 +204,7 @@ delay(1000);
 
 	acceptIncommingMessages();
 
-	printf("[%ld] ConfigurationComplete\n", pthread_self());
+	logInfo("ConfigurationComplete");
 
 	//do some idle work
 	time_t rawtime;
