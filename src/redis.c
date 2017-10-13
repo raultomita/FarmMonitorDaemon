@@ -13,22 +13,6 @@ pthread_mutex_t notificationMutex = PTHREAD_MUTEX_INITIALIZER;
 
 redisContext *globalContext;
 
-char *getDeviceState(char *deviceId)
-{
-    redisContext *deviceStateContext = createSyncRedisConnection();
-
-    if (deviceStateContext == NULL)
-    {
-        logError("DeviceStateContext is null");
-        return NULL;
-    }
-
-    redisReply *r = redisCommand(deviceStateContext, "HGET %s state", deviceId);
-    freeReplyObject(r);
-    redisFree(deviceStateContext);
-    return r->str;
-}
-
 void onRedisConnected(const redisAsyncContext *c, int status)
 {
     if (status != REDIS_OK)
@@ -68,6 +52,22 @@ redisContext *createSyncRedisConnection()
         return c;
     }
     return NULL;
+}
+
+char *getDeviceState(char *deviceId)
+{
+    redisContext *deviceStateContext = createSyncRedisConnection();
+
+    if (deviceStateContext == NULL)
+    {
+        logError("DeviceStateContext is null");
+        return NULL;
+    }
+
+    redisReply *r = redisCommand(deviceStateContext, "HGET %s state", deviceId);
+    freeReplyObject(r);
+    redisFree(deviceStateContext);
+    return r->str;
 }
 
 void onRedisCommandReceived(redisAsyncContext *c, void *reply, void *privdata)
