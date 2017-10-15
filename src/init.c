@@ -120,32 +120,33 @@ void initializeDevice(char *deviceId, redisReply *r)
 			initializeToggleButton(deviceId, r);
 		}
 	}
+}
 
-	int main(void)
+int main(void)
+{
+	//Wait for redis to start. Later will be with containers and we no longer need this line of code.
+	delay(2000);
+	//Initializes pins as GPIO numbers
+	wiringPiSetupGpio();
+	initializeRedis();
+
+	logInfo("[Main] Init completed");
+
+	//do some idle work
+	time_t rawtime;
+	struct tm *timeInfo;
+
+	while (1)
 	{
-		//Wait for redis to start. Later will be with containers and we no longer need this line of code.
-		delay(2000);
-		//Initializes pins as GPIO numbers
-		wiringPiSetupGpio();
-		initializeRedis();
+		state = !state;
 
-		logInfo("[Main] Init completed");
+		time(&rawtime);
+		timeInfo = localtime(&rawtime);
 
-		//do some idle work
-		time_t rawtime;
-		struct tm *timeInfo;
+		timerCallbackWatering(timeInfo);
+		timerCallbackTankLevel(timeInfo);
 
-		while (1)
-		{
-			state = !state;
-
-			time(&rawtime);
-			timeInfo = localtime(&rawtime);
-
-			timerCallbackWatering(timeInfo);
-			timerCallbackTankLevel(timeInfo);
-
-			delay(1000);
-		}
-		return 0;
+		delay(1000);
 	}
+	return 0;
+}
