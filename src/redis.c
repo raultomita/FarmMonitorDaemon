@@ -68,10 +68,9 @@ void onDeviceDataReceived(redisAsyncContext *c, void *reply, void *privdata)
         r->elements > 1 &&
         strcmp(r->element[0]->str, "type") == 0)
     {
-        char *deviceId = privdata;
-        //I should transform all the data in something more friendly
-        logInfo("[Redis] Received data for %s", r->element[1]->str);
-        //initializeDevice(deviceId, r);
+        char *deviceId = privdata;        
+        logInfo("[Redis] Received data for %s of type %s", deviceId, r->element[1]->str);
+        initializeDevice(deviceId, r);
     }
 }
 
@@ -126,8 +125,9 @@ void onInstanceDevicesReceived(redisAsyncContext *c, void *reply, void *privdata
     int dataIndex;
     for (dataIndex = 0; dataIndex < r->element[1]->elements; dataIndex++)
     {
+        char *deviceId = r->element[1]->element[dataIndex]->str;
         logInfo("[Redis] Device %s is registered", r->element[1]->element[dataIndex]->str);
-        //sendCommandToRedis(onDeviceDataReceived, NULL , "HGETALL %s", r->element[1]->element[dataIndex]->str);
+        sendCommandToRedis(onDeviceDataReceived, deviceId, "HGETALL %s", deviceId);
     }
 
     //end
@@ -144,7 +144,20 @@ void onInstanceDevicesReceived(redisAsyncContext *c, void *reply, void *privdata
 //-------
 //Redis connection management
 //-------
-void onRedisAsyncConnected(const redisAsyncContext *c, int status)
+void onRedisExternalCommandsConnected(const redisAsyncContext *c, int status)
+{
+    if (status != REDIS_OK)
+    {
+        logError("[Redis] Connection to server failed: %s", c->errstr);
+        return;
+    }
+
+    logInfo("[Redis] External commands context connected to server");
+
+    redisAsyncCommand(c, onExternalCommandReceived, NULL, "SUBSCRIBE commands");
+}
+
+void onRedisGeneralPurposeConnected(const redisAsyncContext *c, int status)
 {
     if (status != REDIS_OK)
     {
@@ -158,13 +171,10 @@ void onRedisAsyncConnected(const redisAsyncContext *c, int status)
     {
         sendCommandToRedis(onInstanceDevicesReceived, NULL, "SSCAN %s 0", instanceId);
     }
-
-    sendCommandToRedis(onExternalCommandReceived, NULL, "SUBSCRIBE commands");
 }
 
 void onRedisAsyncDisconnected(const redisAsyncContext *c, int status)
 {
-
     if (status != REDIS_OK)
     {
         logError("[Redis] Disconnected from server with: %s", c->errstr);
@@ -173,19 +183,49 @@ void onRedisAsyncDisconnected(const redisAsyncContext *c, int status)
     logInfo("[Redis] Disconnected from server");
 }
 
-void *redisConnectionThreadHandler(void *threadId)
+void *externalCommandsThreadHandler(void *threadId)
 {
     signal(SIGPIPE, SIG_IGN);
     struct event_base *base = event_base_new();
 
-    logInfo("[Redis] Connection thread started");
+    logInfo("[Redis] External commands thread started");
+
+    while (1)
+    {
+        redisAsyncConnect *c = redisAsyncConnect(redisHost, redisPort);
+        if (c->err)
+        {
+            logError("[Redis] External commands thread handler error: %s", c->errstr);
+        }
+        else
+        {
+            redisLibeventAttach(c, base);
+            redisAsyncSetConnectCallback(c, onRedisAsyncConnected);
+            redisAsyncSetDisconnectCallback(c, onRedisAsyncDisconnected);
+            event_base_dispatch(base);
+        }
+
+        logInfo("[Redis] Trying to reconnect external commands in 5 sec");
+        sleep(5);
+    }
+
+    logInfo("[Redis] Exit external commands thread");
+    pthread_exit(NULL);
+}
+
+void *generalPurposeThreadHandler(void *threadId)
+{
+    signal(SIGPIPE, SIG_IGN);
+    struct event_base *base = event_base_new();
+
+    logInfo("[Redis] General purpose thread started");
 
     while (1)
     {
         globalContext = redisAsyncConnect(redisHost, redisPort);
         if (globalContext->err)
         {
-            logError("[Redis] Connection thread handler error: %s", globalContext->errstr);
+            logError("[Redis] General purpose thread handler error: %s", globalContext->errstr);
         }
         else
         {
@@ -195,11 +235,11 @@ void *redisConnectionThreadHandler(void *threadId)
             event_base_dispatch(base);
         }
         globalContext = NULL;
-        logInfo("[Redis] Trying to reconnect in 5 sec");
+        logInfo("[Redis] Trying to reconnect general purpose context in 5 sec");
         sleep(5);
     }
 
-    logInfo("[Redis] Exit connection thread");
+    logInfo("[Redis] Exit general purpose thread");
     pthread_exit(NULL);
 }
 
@@ -235,6 +275,8 @@ void requestDeviceState(char *deviceId)
 
 void initializeRedis(void)
 {
-    pthread_t thread;
-    pthread_create(&thread, NULL, redisConnectionThreadHandler, NULL);
+    pthread_t threadExternalCommands;
+    pthread_t threadGeneralPuroose;
+    pthread_create(&threadExternalCommands, NULL, externalCommandsThreadHandler, NULL);
+    pthread_create(&threadGeneralPuroose, NULL, generalPuposeThreadHandler, NULL);
 }
