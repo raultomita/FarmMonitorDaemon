@@ -102,6 +102,7 @@ void addTankLevel(char *tankLevelId, char *display, char *location, int commandG
 		lastTankLevel = newDevice;
 	}
 
+	newDevice->next = NULL;
 	pinMode(newDevice->commandGpio, OUTPUT);
 	pinMode(newDevice->notifyGpio, OUTPUT);
 	pinMode(newDevice->levelGpio, OUTPUT);

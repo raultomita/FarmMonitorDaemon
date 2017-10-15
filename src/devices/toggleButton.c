@@ -61,16 +61,15 @@ int setNightWithness(char *targetDeviceId)
 	{
 		return 0;
 	}
-    int indexOfColon = strcspn(targetDeviceId, ":");
-logInfo("[ToggleButton] index of colon %d", indexOfColon);
+	int indexOfColon = strcspn(targetDeviceId, ":");
+	logInfo("[ToggleButton] index of colon %d", indexOfColon);
 	ToggleButtonList *current = firstToggleButton;
 	while (current != NULL)
 	{
 		if (strncmp(current->targetDeviceId, targetDeviceId, indexOfColon) == 0)
 		{
-
 			logInfo("[ToggleButton] led should be notified after this step %s and state ", current->targetDeviceId);
-			 if (targetDeviceId[indexOfColon + 1] == '1')
+			if (targetDeviceId[indexOfColon + 1] == '1')
 			{
 				digitalWrite(current->ledGpio, HIGH);
 			}
@@ -78,12 +77,11 @@ logInfo("[ToggleButton] index of colon %d", indexOfColon);
 			{
 				digitalWrite(current->ledGpio, LOW);
 			}
-		
 		}
-		
+
 		current = current->next;
 	}
-	
+
 	return 1;
 }
 
@@ -118,7 +116,8 @@ void addToggleButton(char *toggleButtonId, int gpio, int ledGpio, char *targetDe
 	wiringPiISR(newDevice->gpio, INT_EDGE_RISING, &toggleTargetDeviceId);
 }
 
-void initToggleButton(){	
+void initToggleButton()
+{
 	if (regcomp(&toggleButtonRegex, "^switch[0-9]*:[01]$", 0))
 	{
 		logError("[ToggleButton] Regex pattern could not be compiled");

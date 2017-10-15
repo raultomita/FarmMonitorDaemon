@@ -53,7 +53,7 @@ int toggleSwitch(char *switchId)
 {
 	logInfo("[Switch] Enter switch for %s", switchId);
 	int ret = regexec(&switchRegex, switchId, 0, NULL, 0);
-	logInfo	("[Switch] regExt return %d", ret);
+	logInfo("[Switch] regExt return %d", ret);
 	if (regexec(&switchRegex, switchId, 0, NULL, 0))
 	{
 		return 0;
@@ -63,15 +63,15 @@ int toggleSwitch(char *switchId)
 
 	while (current != NULL)
 	{
-logInfo("[Switch] internal deviceId %s whereas parameter switchId is %s", current->deviceId, switchId);
+		logInfo("[Switch] internal deviceId %s whereas parameter switchId is %s", current->deviceId, switchId);
 		if (strcmp(current->deviceId, switchId) == 0)
 		{
 			digitalWrite(current->gpio, !digitalRead(current->gpio));
 			sendSwitchNotification(current);
 		}
-logInfo("[Switch] move to next Switch");
+		logInfo("[Switch] move to next Switch");
 		current = current->next;
-logInfo("[Switch] moved to next Switch %d", current != NULL);
+		logInfo("[Switch] moved to next Switch %d", current != NULL);
 	}
 
 	return 1;

@@ -70,6 +70,7 @@ void addWatering(char *wateringId, char *display, char *location, int commandGpi
 		lastWatering = newDevice;
 	}
 
+	newDevice->next = NULL;
 	pinMode(newDevice->commandGpio, OUTPUT);
 	pinMode(newDevice->notifyGpio, OUTPUT);
 	digitalWrite(newDevice->commandGpio, LOW);

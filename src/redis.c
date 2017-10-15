@@ -25,7 +25,10 @@ void sendCommandToRedis(redisCallbackFn *fn, char *privdata, const char *format,
 
     va_list args;
     va_start(args, format);
+    logInfo("[Redis] Aquiring lock in order to send command");
+    pthread_mutex_lock(&redisMutex);
     redisvAsyncCommand(globalContext, fn, privdata, format, args);
+    pthread_mutex_unlock(&redisMutex);
     va_end(args);
     logInfo("[Redis] %s", format);
 }
@@ -248,7 +251,6 @@ void initializeRedis(void)
 
 void sendMessage(int channel, char *key, char *data)
 {
-logInfo("[Redis] Entering sending message");
     logInfo("[Redis] Sending message %d and key %s", channel, key);
 
     switch (channel)
