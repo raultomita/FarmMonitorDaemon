@@ -1,1 +1,1 @@
-gcc -Wall -o farmMonitor src/*.c src/devices/*.c -L/usr/local/lib -lwiringPi -lhiredis -levent -lpthread -Wl,-rpath=/usr/local/lib
+gcc -g -Wall -o farmMonitor src/*.c src/devices/*.c -L/usr/local/lib -lwiringPi -lhiredis -levent -lpthread -Wl,-rpath=/usr/local/lib

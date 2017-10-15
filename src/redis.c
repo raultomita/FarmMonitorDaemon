@@ -237,7 +237,7 @@ void *generalPurposeThreadHandler(void *threadId)
 void initializeRedis(void)
 {
     instanceId = (char *)malloc(512 * sizeof(char));
-    gethostname(instanceId, sizeof(instanceId));
+    gethostname(instanceId, 512);
     logInfo("[Redis] host name is %s", instanceId);
 
     pthread_t threadExternalCommands;
@@ -248,7 +248,8 @@ void initializeRedis(void)
 
 void sendMessage(int channel, char *key, char *data)
 {
-    logInfo("[Redis] Sending message");
+logInfo("[Redis] Entering sending message");
+    logInfo("[Redis] Sending message %d and key %s", channel, key);
 
     switch (channel)
     {
