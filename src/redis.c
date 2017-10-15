@@ -13,18 +13,18 @@
 pthread_mutex_t redisMutex = PTHREAD_MUTEX_INITIALIZER;
 volatile int instanceInitialized = 0;
 
-redisAsyncContext *redisAsyncContext;
+redisAsyncContext *globalContext;
 
 void sendCommandToRedis(redisCallbackFn *fn, void *privdata, const char *format, ...)
 {
-    if (redisAsyncContext == NULL)
+    if (globalContext == NULL)
     {
         logInfo("[Redis] Command cannot be sent due to client not being connected (%s)", format);
         return;
     }
     va_list args;
     va_start(args, format);
-    redisvAsyncCommand(redisAsyncContext, redisCallbackFn, privdata, format, args);
+    redisvAsyncCommand(globalContext, redisCallbackFn, privdata, format, args);
     va_end(args);
     logInfo("[Redis] %s", format);
 }
@@ -155,7 +155,7 @@ void onRedisAsyncConnected(const redisAsyncContext *c, int status)
 
     logInfo("[Redis] Connected to server");
 
-    redisAsyncContext = c;
+    globalContext = c;
     if (!instanceInitialized)
     {
         sendCommandToRedis(onInstanceDevicesReceived, NULL, "SSCAN %s 0", instanceId);
@@ -166,7 +166,7 @@ void onRedisAsyncConnected(const redisAsyncContext *c, int status)
 
 void onRedisAsyncDisconnected(const redisAsyncContext *c, int status)
 {
-    redisAsyncContext = NULL;
+    globalContext = NULL;
 
     if (status != REDIS_OK)
     {
