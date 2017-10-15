@@ -61,15 +61,16 @@ void setNightWithness(char *targetDeviceId)
 		printf("Enter again %d\n", current != NULL);
 		if (strcmp(current->targetDeviceId, targetDeviceId) == 0)
 		{
-			printf("led should be notified after this step %s and state %s\n", current->targetDeviceId, getDeviceState(current->targetDeviceId));
-			if (strcmp(getDeviceState(current->targetDeviceId), "0") == 0)
-			{
-				digitalWrite(current->ledGpio, HIGH);
-			}
-			else
-			{
-				digitalWrite(current->ledGpio, LOW);
-			}
+			requestDeviceState(current->targetDeviceId);
+			// printf("led should be notified after this step %s and state %s\n", current->targetDeviceId, getDeviceState(current->targetDeviceId));
+			// if (strcmp(getDeviceState(current->targetDeviceId), "0") == 0)
+			// {
+			// 	digitalWrite(current->ledGpio, HIGH);
+			// }
+			// else
+			// {
+			// 	digitalWrite(current->ledGpio, LOW);
+			// }
 			printf("led should be notified already\n");
 		}
 		printf("finish night withness sensor %s\n", current->deviceId);

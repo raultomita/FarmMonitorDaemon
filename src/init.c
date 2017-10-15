@@ -53,39 +53,6 @@ int triggerInternalDevice(char *deviceMessage)
 	return 2; //not supported
 }
 
-int isInstanceQueryResultValid(redisReply *r)
-{
-	if (r->type != REDIS_REPLY_ARRAY)
-	{
-		logError("Response for SSCAN is not an array");
-		return 0;
-	}
-
-	if (r->elements != 2)
-	{
-		int i = 0;
-		for (i = 0; i < r->elements; i++)
-		{
-			logError("element type %d", r->element[i]->type);
-		}
-		logError("Array does not contains two elements");
-		return 0;
-	}
-
-	if (r->element[1] == NULL || r->element[1]->type != REDIS_REPLY_ARRAY)
-	{
-		logError("Second element from SSCAN is not an array with device ids");
-		return 0;
-	}
-
-	return 1;
-}
-
-int stilExistItems(redisReply *r)
-{
-	return r->element[0] != NULL && strcmp(r->element[0]->str, "0") != 0;
-}
-
 void initializeSwitch(char *deviceId, redisReply *r)
 {
 	logInfo("Init switch with id %s", deviceId);
@@ -130,97 +97,55 @@ void initializeToggleButton(char *deviceId, redisReply *r)
 	}
 }
 
-void initializeDevices(redisContext *c, char *cursor)
+void initializeDevice(char *deviceId, redisReply *r)
 {
-	logInfo("Query for device ids for cursor %s", cursor);
-
-	redisReply *r = redisCommand(c, "SSCAN %s %s", instanceId, cursor);
-
-	if (isInstanceQueryResultValid(r))
+	if (r->type == REDIS_REPLY_ARRAY &&
+		r->elements > 1 &&
+		strcmp(r->element[0]->str, "type") == 0)
 	{
-		redisReply *replyDeviceId;
-		int dataIndex;
-		for (dataIndex = 0; dataIndex < r->element[1]->elements; dataIndex++)
+		if (strcmp(r->element[1]->str, "switch") == 0)
 		{
-			replyDeviceId = redisCommand(c, "HGETALL %s", r->element[1]->element[dataIndex]->str);
-			if (replyDeviceId->type == REDIS_REPLY_ARRAY &&
-				replyDeviceId->elements > 1 &&
-				strcmp(replyDeviceId->element[0]->str, "type") == 0)
-			{
-				if (strcmp(replyDeviceId->element[1]->str, "switch") == 0)
-				{
-					initializeSwitch(r->element[1]->element[dataIndex]->str, replyDeviceId);
-				}
-				else if (strcmp(replyDeviceId->element[1]->str, "tankLevel") == 0)
-				{
-					initializeTankLevel(r->element[1]->element[dataIndex]->str, replyDeviceId);
-				}
-				else if (strcmp(replyDeviceId->element[1]->str, "watering") == 0)
-				{
-					initializeWatering(r->element[1]->element[dataIndex]->str, replyDeviceId);
-				}
-				else if (strcmp(replyDeviceId->element[1]->str, "toggleButton") == 0)
-				{
-					initializeToggleButton(r->element[1]->element[dataIndex]->str, replyDeviceId);
-				}
-			}
-			freeReplyObject(replyDeviceId);
+			initializeSwitch(deviceId, r);
 		}
-
-		if (stilExistItems(r))
+		else if (strcmp(r->element[1]->str, "tankLevel") == 0)
 		{
-			initializeDevices(c, r->element[0]->str);
+			initializeTankLevel(deviceId, r);
+		}
+		else if (strcmp(r->element[1]->str, "watering") == 0)
+		{
+			initializeWatering(deviceId, r);
+		}
+		else if (strcmp(r->element[1]->str, "toggleButton") == 0)
+		{
+			initializeToggleButton(deviceId, r);
 		}
 	}
 
-	freeReplyObject(r);
-}
-
-int main(void)
-{
-	//Wait for redis to start. Later will be with containers and we no longer need this line of code.
-	delay(2000);
-	//Initializes pins as GPIO numbers
-	wiringPiSetupGpio();
-	initializeRedisPortal();
-	delay(1000);
-	redisContext *c = redisConnect(redisHost, redisPort);
-	if (c == NULL || c->err)
+	int main(void)
 	{
-		if (c)
+		//Wait for redis to start. Later will be with containers and we no longer need this line of code.
+		delay(2000);
+		//Initializes pins as GPIO numbers
+		wiringPiSetupGpio();
+		initializeRedis();
+
+		logInfo("[Main] Init completed");
+
+		//do some idle work
+		time_t rawtime;
+		struct tm *timeInfo;
+
+		while (1)
 		{
-			logError("Error in initializing devices: %s", c->errstr);
+			state = !state;
+
+			time(&rawtime);
+			timeInfo = localtime(&rawtime);
+
+			timerCallbackWatering(timeInfo);
+			timerCallbackTankLevel(timeInfo);
+
+			delay(1000);
 		}
-		else
-		{
-			logError("Can't allocate redis context in initializing devices");
-		}
+		return 0;
 	}
-	else
-	{
-		initializeDevices(c, "0");
-	}
-	redisFree(c);
-
-	acceptIncommingMessages();
-
-	logInfo("ConfigurationComplete");
-
-	//do some idle work
-	time_t rawtime;
-	struct tm *timeInfo;
-
-	while (1)
-	{
-		state = !state;
-
-		time(&rawtime);
-		timeInfo = localtime(&rawtime);
-
-		timerCallbackWatering(timeInfo);
-		timerCallbackTankLevel(timeInfo);
-
-		delay(1000);
-	}
-	return 0;
-}
