@@ -12,7 +12,7 @@ int triggerWatering(char *deviceId);
 void timerCallbackWatering(struct tm *timeinfo);
 
 //Toggle button public methods
-void initToggleButton(void)
+void initToggleButton(void);
 void addToggleButton(char *toggleButtonId, int gpio, int ledGpio, char *targetDeviceId);
 int setNightWithness(char *targetDeviceId);
 

@@ -26,22 +26,11 @@ void getCurrentTimeInfo(char *timeString, int bufferSize)
 
 int triggerInternalDevice(char *deviceMessage)
 {
-	if (strncmp("tankLevel", deviceMessage, strlen("tankLevel")) == 0)
-	{
-		return triggerTankLevel(deviceMessage);
-	}
-	else if (strncmp("switch", deviceMessage, strlen("switch")) == 0)
-	{
-		int result = toggleSwitch(deviceMessage);
-		setNightWithness(deviceMessage);
-		return result;
-	}
-	else if (strncmp("watering", deviceMessage, strlen("watering")) == 0)
-	{
-		return triggerWatering(deviceMessage);
-	}
 
-	return 2; //not supported
+	triggerTankLevel(deviceMessage);
+	toggleSwitch(deviceMessage);
+	setNightWithness(deviceMessage);
+	triggerWatering(deviceMessage);
 }
 
 void initializeSwitch(char *deviceId, redisReply *r)
@@ -119,7 +108,7 @@ int main(void)
 	delay(2000);
 	//Initializes pins as GPIO numbers
 	wiringPiSetupGpio();
-	
+
 	initSwitch();
 	initToggleButton();
 	initWatering();
