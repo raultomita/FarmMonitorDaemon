@@ -15,7 +15,7 @@ volatile int instanceInitialized = 0;
 
 redisAsyncContext *globalContext;
 
-void sendCommandToRedis(redisCallbackFn *fn, void *privdata, const char *format, ...)
+void sendCommandToRedis(redisCallbackFn *fn, char *privdata, const char *format, ...)
 {
     if (globalContext == NULL)
     {
@@ -69,7 +69,7 @@ void onDeviceDataReceived(redisAsyncContext *c, void *reply, void *privdata)
         strcmp(r->element[0]->str, "type") == 0)
     {
         char *deviceId = privdata;        
-        logInfo("[Redis] Received data for %s of type %s", deviceId, r->element[1]->str);
+        logInfo("[Redis] Received data for %s of type %s", (char*)privdata,  r->element[1]->str);
         initializeDevice(deviceId, r);
     }
 }
@@ -125,9 +125,10 @@ void onInstanceDevicesReceived(redisAsyncContext *c, void *reply, void *privdata
     int dataIndex;
     for (dataIndex = 0; dataIndex < r->element[1]->elements; dataIndex++)
     {
-        char *deviceId = r->element[1]->element[dataIndex]->str;
-        logInfo("[Redis] Device %s is registered", r->element[1]->element[dataIndex]->str);
-        sendCommandToRedis(onDeviceDataReceived, deviceId, "HGETALL %s", deviceId);
+        char *deviceId = (char*)malloc(strlen(r->element[1]->element[dataIndex]->str)*sizeof(char));
+	strcpy(deviceId, r->element[1]->element[dataIndex]->str);
+        logInfo("[Redis] Device %s is registered", deviceId);
+     sendCommandToRedis(onDeviceDataReceived, (char*)deviceId, "HGETALL %s", deviceId);
     }
 
     //end
@@ -153,8 +154,6 @@ void onRedisExternalCommandsConnected(const redisAsyncContext *c, int status)
     }
 
     logInfo("[Redis] External commands context connected to server");
-
-    redisAsyncCommand(c, onExternalCommandReceived, NULL, "SUBSCRIBE commands");
 }
 
 void onRedisGeneralPurposeConnected(const redisAsyncContext *c, int status)
@@ -192,7 +191,7 @@ void *externalCommandsThreadHandler(void *threadId)
 
     while (1)
     {
-        redisAsyncConnect *c = redisAsyncConnect(redisHost, redisPort);
+        redisAsyncContext *c = redisAsyncConnect(redisHost, redisPort);
         if (c->err)
         {
             logError("[Redis] External commands thread handler error: %s", c->errstr);
@@ -200,8 +199,9 @@ void *externalCommandsThreadHandler(void *threadId)
         else
         {
             redisLibeventAttach(c, base);
-            redisAsyncSetConnectCallback(c, onRedisAsyncConnected);
+            redisAsyncSetConnectCallback(c, onRedisExternalCommandsConnected);
             redisAsyncSetDisconnectCallback(c, onRedisAsyncDisconnected);
+            redisAsyncCommand(c, onExternalCommandReceived, NULL, "SUBSCRIBE commands");
             event_base_dispatch(base);
         }
 
@@ -230,7 +230,7 @@ void *generalPurposeThreadHandler(void *threadId)
         else
         {
             redisLibeventAttach(globalContext, base);
-            redisAsyncSetConnectCallback(globalContext, onRedisAsyncConnected);
+            redisAsyncSetConnectCallback(globalContext, onRedisGeneralPurposeConnected);
             redisAsyncSetDisconnectCallback(globalContext, onRedisAsyncDisconnected);
             event_base_dispatch(base);
         }
@@ -278,5 +278,5 @@ void initializeRedis(void)
     pthread_t threadExternalCommands;
     pthread_t threadGeneralPuroose;
     pthread_create(&threadExternalCommands, NULL, externalCommandsThreadHandler, NULL);
-    pthread_create(&threadGeneralPuroose, NULL, generalPuposeThreadHandler, NULL);
+    pthread_create(&threadGeneralPuroose, NULL, generalPurposeThreadHandler, NULL);
 }
