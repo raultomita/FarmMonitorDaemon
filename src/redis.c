@@ -134,11 +134,13 @@ void *externalCommandsThreadHandler(void *threadId)
     signal(SIGPIPE, SIG_IGN);
     struct event_base *base = event_base_new();
 
+    while(1){
     redisAsyncContext *c = redisAsyncConnect(redisHost, redisPort);
     if (c->err)
     {
         logError("[Input] Redis thread handler error: %s", c->errstr);
     }
+    else{
 
     redisLibeventAttach(c, base);
     redisAsyncSetConnectCallback(c, onRedisConnected);
@@ -146,6 +148,11 @@ void *externalCommandsThreadHandler(void *threadId)
     redisAsyncCommand(c, onRedisCommandReceived, NULL, "SUBSCRIBE commands");
     logInfo("[Input] Subscribed to commands channel");
     event_base_dispatch(base);
+    }
+    logInfo("Trying to reconnect to redis in 2 sec");
+    delay(2000);
+    }
+    logInfo("Exit async redis thread");
     pthread_exit(NULL);
 }
 
