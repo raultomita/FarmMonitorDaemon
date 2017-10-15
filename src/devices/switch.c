@@ -105,8 +105,7 @@ void addSwitch(char *switchId, char *display, char *location, int gpio)
 
 void initSwitch(void)
 {
-	int ret = regcomp(&switchRegex, "switch[0-9]+", 0);
-	if (reti)
+	if (regcomp(&switchRegex, "switch[0-9]+", 0))
 	{
 		logError("[Switch] Regex pattern could not be compiled");
 	}

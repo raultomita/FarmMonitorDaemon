@@ -47,14 +47,14 @@ void toggleTargetDeviceId(int pinNumber)
 
 			printf("toggleDeficeId %s\n", current->deviceId);
 
-			sendMessage(COMMAND, deviceMessage, NULL);
+			sendMessage(COMMAND, current->deviceId, NULL);
 			return;
 		}
 		current = current->next;
 	}
 }
 
-void setNightWithness(char *targetDeviceId)
+int setNightWithness(char *targetDeviceId)
 {
 	if (regexec(&toggleButtonRegex, targetDeviceId, 0, NULL, 0))
 	{
@@ -68,7 +68,7 @@ void setNightWithness(char *targetDeviceId)
 		{
 
 			// printf("led should be notified after this step %s and state %s\n", current->targetDeviceId, getDeviceState(current->targetDeviceId));
-			 if (targetDeviceId[indexOf + 1] == '1')
+			 if (targetDeviceId[indexOfColon + 1] == '1')
 			{
 				digitalWrite(current->ledGpio, HIGH);
 			}
@@ -116,9 +116,8 @@ void addToggleButton(char *toggleButtonId, int gpio, int ledGpio, char *targetDe
 	wiringPiISR(newDevice->gpio, INT_EDGE_RISING, &toggleTargetDeviceId);
 }
 
-void initToggleButton(){
-	int ret = regcomp(&switchRegex, "swithc[0-9]+:[01]", 0);
-	if (reti)
+void initToggleButton(){	
+	if (regcomp(&toggleButtonRegex, "swithc[0-9]+:[01]", 0))
 	{
 		logError("[ToggleButton] Regex pattern could not be compiled");
 	}

@@ -153,9 +153,8 @@ int triggerWatering(char *deviceId)
 	return 0;
 }
 
-void initWatering(){
-	int ret = regcomp(&switchRegex, "watering[0-9]+", 0);
-	if (reti)
+void initWatering(){	
+	if (regcomp(&wateringRegex, "watering[0-9]+", 0))
 	{
 		logError("[Watering] Regex pattern could not be compiled");
 	}

@@ -166,9 +166,8 @@ void timerCallbackTankLevel(struct tm *timeinfo)
 	}
 }
 
-void initTankLevel(){
-	int ret = regcomp(&switchRegex, "tankLevel[0-9]+", 0);
-	if (reti)
+void initTankLevel(){	
+	if (regcomp(&tankLevelRegex, "tankLevel[0-9]+", 0))
 	{
 		logError("[TankLevel] Regex pattern could not be compiled");
 	}

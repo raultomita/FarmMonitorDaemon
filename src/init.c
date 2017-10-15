@@ -24,7 +24,7 @@ void getCurrentTimeInfo(char *timeString, int bufferSize)
 	strftime(timeString, bufferSize, "%x %X", timeInfo);
 }
 
-int triggerInternalDevice(char *deviceMessage)
+void triggerInternalDevice(char *deviceMessage)
 {
 
 	triggerTankLevel(deviceMessage);
