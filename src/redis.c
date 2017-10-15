@@ -34,7 +34,6 @@ void sendCommandToRedis(redisCallbackFn *fn, void *privdata, const char *format,
 //-------
 void onRedisCommandSent(redisAsyncContext *c, void *reply, void *privdata)
 {
-    redisReply *r = reply;
     if (reply == NULL)
     {
         logError("[Redis] reply in callback is null");
@@ -46,7 +45,6 @@ void onRedisCommandSent(redisAsyncContext *c, void *reply, void *privdata)
 
 void onDeviceStateReceived(redisAsyncContext *c, void *reply, void *privdata)
 {
-    redisReply *r = reply;
     if (reply == NULL)
     {
         logError("[Redis] reply in callback is null");
@@ -73,7 +71,7 @@ void onDeviceDataReceived(redisAsyncContext *c, void *reply, void *privdata)
         char *deviceId = privdata;
         //I should transform all the data in something more friendly
         logInfo("[Redis] Received data for %s", r->element[1]->str);
-        initializeDevice(deviceId, r);
+        //initializeDevice(deviceId, r);
     }
 }
 
@@ -88,12 +86,12 @@ void onExternalCommandReceived(redisAsyncContext *c, void *reply, void *privdata
 
     if (r->type == REDIS_REPLY_ARRAY)
     {
-        logInfo("[Input] Command received");
         int j;
         for (j = 2; j < r->elements; j++)
         {
             if (r->element[j]->str != NULL)
             {
+                logInfo("[Input] Command received");
                 triggerInternalDevice(r->element[j]->str);
             }
         }
@@ -128,7 +126,8 @@ void onInstanceDevicesReceived(redisAsyncContext *c, void *reply, void *privdata
     int dataIndex;
     for (dataIndex = 0; dataIndex < r->element[1]->elements; dataIndex++)
     {
-        sendCommandToRedis(onDeviceDataReceived, r->element[1]->element[dataIndex]->str, "HGETALL %s", r->element[1]->element[dataIndex]->str);
+        logInfo("[Redis] Device %s is registered", r->element[1]->element[dataIndex]->str);
+        //sendCommandToRedis(onDeviceDataReceived, NULL , "HGETALL %s", r->element[1]->element[dataIndex]->str);
     }
 
     //end
@@ -184,15 +183,15 @@ void *redisConnectionThreadHandler(void *threadId)
     while (1)
     {
         globalContext = redisAsyncConnect(redisHost, redisPort);
-        if (c->err)
+        if (globalContext->err)
         {
-            logError("[Redis] Connection thread handler error: %s", c->errstr);
+            logError("[Redis] Connection thread handler error: %s", globalContext->errstr);
         }
         else
         {
-            redisLibeventAttach(c, base);
-            redisAsyncSetConnectCallback(c, onRedisAsyncConnected);
-            redisAsyncSetDisconnectCallback(c, onRedisAsyncDisconnected);
+            redisLibeventAttach(globalContext, base);
+            redisAsyncSetConnectCallback(globalContext, onRedisAsyncConnected);
+            redisAsyncSetDisconnectCallback(globalContext, onRedisAsyncDisconnected);
             event_base_dispatch(base);
         }
         globalContext = NULL;
