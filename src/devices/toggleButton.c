@@ -69,7 +69,7 @@ int setNightWithness(char *targetDeviceId)
 		if (strncmp(current->targetDeviceId, targetDeviceId, indexOfColon) == 0)
 		{
 			logInfo("[ToggleButton] led should be notified after this step %s and state ", current->targetDeviceId);
-			if (targetDeviceId[indexOfColon + 1] == '1')
+			if (targetDeviceId[indexOfColon + 1] == '0')
 			{
 				digitalWrite(current->ledGpio, HIGH);
 			}
