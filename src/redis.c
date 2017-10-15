@@ -35,9 +35,9 @@ void sendCommandToRedis(redisCallbackFn *fn, void *privdata, const char *format,
 void onRedisCommandSent(redisAsyncContext *c, void *reply, void *privdata)
 {
     redisReply *r = reply;
-    if (r == NULL)
+    if (reply == NULL)
     {
-        logError("[Redis] reply in collback is null");
+        logError("[Redis] reply in callback is null");
         return;
     }
 
@@ -47,9 +47,9 @@ void onRedisCommandSent(redisAsyncContext *c, void *reply, void *privdata)
 void onDeviceStateReceived(redisAsyncContext *c, void *reply, void *privdata)
 {
     redisReply *r = reply;
-    if (r == NULL)
+    if (reply == NULL)
     {
-        logError("[Redis] reply in collback is null");
+        logError("[Redis] reply in callback is null");
         return;
     }
 
@@ -60,9 +60,9 @@ void onDeviceStateReceived(redisAsyncContext *c, void *reply, void *privdata)
 void onDeviceDataReceived(redisAsyncContext *c, void *reply, void *privdata)
 {
     redisReply *r = reply;
-    if (r == NULL)
+    if (reply == NULL)
     {
-        logError("[Redis] reply in collback is null");
+        logError("[Redis] reply in callback is null");
         return;
     }
 
@@ -80,9 +80,9 @@ void onDeviceDataReceived(redisAsyncContext *c, void *reply, void *privdata)
 void onExternalCommandReceived(redisAsyncContext *c, void *reply, void *privdata)
 {
     redisReply *r = reply;
-    if (r == NULL)
+    if (reply == NULL)
     {
-        logError("[Redis] reply in collback is null");
+        logError("[Redis] reply in callback is null");
         return;
     }
 
@@ -103,9 +103,9 @@ void onExternalCommandReceived(redisAsyncContext *c, void *reply, void *privdata
 void onInstanceDevicesReceived(redisAsyncContext *c, void *reply, void *privdata)
 {
     redisReply *r = reply;
-    if (r == NULL)
+    if (reply == NULL)
     {
-        logError("[Redis] reply in collback is null");
+        logError("[Redis] reply in callback is null");
         return;
     }
 
@@ -155,7 +155,6 @@ void onRedisAsyncConnected(const redisAsyncContext *c, int status)
 
     logInfo("[Redis] Connected to server");
 
-    globalContext = c;
     if (!instanceInitialized)
     {
         sendCommandToRedis(onInstanceDevicesReceived, NULL, "SSCAN %s 0", instanceId);
@@ -166,7 +165,6 @@ void onRedisAsyncConnected(const redisAsyncContext *c, int status)
 
 void onRedisAsyncDisconnected(const redisAsyncContext *c, int status)
 {
-    globalContext = NULL;
 
     if (status != REDIS_OK)
     {
@@ -185,7 +183,7 @@ void *redisConnectionThreadHandler(void *threadId)
 
     while (1)
     {
-        redisAsyncContext *c = redisAsyncConnect(redisHost, redisPort);
+        globalContext = redisAsyncConnect(redisHost, redisPort);
         if (c->err)
         {
             logError("[Redis] Connection thread handler error: %s", c->errstr);
@@ -197,6 +195,7 @@ void *redisConnectionThreadHandler(void *threadId)
             redisAsyncSetDisconnectCallback(c, onRedisAsyncDisconnected);
             event_base_dispatch(base);
         }
+        globalContext = NULL;
         logInfo("[Redis] Trying to reconnect in 5 sec");
         sleep(5);
     }
