@@ -265,13 +265,13 @@ void sendMessage(int channel, char *key, char *data)
     {
     case NOTIFICATION:    
         logInfo("[Redis] Save notification %s in devices and publish", key);
-        eredis_w_cmd("HSET devices %s %s", key, data);
-        eredis_w_cmd("PUBLISH notifications %s", data);
+        eredis_w_cmd(eredisContext, "HSET devices %s %s", key, data);
+        eredis_w_cmd(eredisContext, "PUBLISH notifications %s", data);
         logInfo("[Redis] Notification sent to %s", key);
         break;
     case COMMAND:
         logInfo("[Redis] Send external command to %s", key);
-        eredis_w_cmd( "PUBLISH commands %s", key);
+        eredis_w_cmd(eredisContext, "PUBLISH commands %s", key);
         logInfo("[Portal] Command sent to %s", key);
         break;
     }
