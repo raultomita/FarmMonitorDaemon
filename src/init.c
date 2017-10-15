@@ -24,15 +24,6 @@ void getCurrentTimeInfo(char *timeString, int bufferSize)
 	strftime(timeString, bufferSize, "%x %X", timeInfo);
 }
 
-void triggerDevice(char *deviceMessage)
-{
-	int result = triggerInternalDevice(deviceMessage);
-	if (result == 0)
-	{
-		sendMessage(COMMAND, deviceMessage, NULL);
-	}
-}
-
 int triggerInternalDevice(char *deviceMessage)
 {
 	if (strncmp("tankLevel", deviceMessage, strlen("tankLevel")) == 0)
@@ -128,6 +119,12 @@ int main(void)
 	delay(2000);
 	//Initializes pins as GPIO numbers
 	wiringPiSetupGpio();
+	
+	initSwitch();
+	initToggleButton();
+	initWatering();
+	initTankLevel();
+
 	initializeRedis();
 
 	logInfo("[Main] Init completed");

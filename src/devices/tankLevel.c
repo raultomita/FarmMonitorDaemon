@@ -3,12 +3,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <regex.h>
 
 #include "../main.h"
 #include "devices.h"
 
 const char *tankLevelJsonFormat =
 	"{ \"id\": \"%s\", \"type\": \"tankLevel\", \"display\":\"%s\", \"location\":\"%s\", \"timeStamp\": \"%s\", \"level\": \"%d\", \"state\": \"%d\" }";
+regex_t tankLevelRegex;
 
 typedef struct TankLevel
 {
@@ -114,6 +116,11 @@ void addTankLevel(char *tankLevelId, char *display, char *location, int commandG
 
 int triggerTankLevel(char *deviceId)
 {
+	if (regexec(&tankLevelRegex, deviceId, 0, NULL, 0))
+	{
+		return 0;
+	}
+
 	TankLevelList *current = firstTankLevel;
 
 	while (current != NULL)
@@ -130,13 +137,13 @@ int triggerTankLevel(char *deviceId)
 			}
 
 			sendTankLevelNotification(current);
-			return 1;
+			
 		}
 
 		current = current->next;
 	}
 
-	return 0;
+	return 1;
 }
 
 void timerCallbackTankLevel(struct tm *timeinfo)
@@ -156,5 +163,13 @@ void timerCallbackTankLevel(struct tm *timeinfo)
 		}
 
 		current = current->next;
+	}
+}
+
+void initTankLevel(){
+	int ret = regcomp(&switchRegex, "tankLevel[0-9]+", 0);
+	if (reti)
+	{
+		logError("[TankLevel] Regex pattern could not be compiled");
 	}
 }

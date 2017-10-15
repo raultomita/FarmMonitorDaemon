@@ -3,12 +3,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <regex.h>
 
 #include "../main.h"
 #include "devices.h"
 
 const char *switchJsonFormat =
 	"{ \"id\": \"%s\", \"type\": \"switch\", \"display\":\"%s\", \"location\":\"%s\", \"timeStamp\": \"%s\", \"state\": \"%d\" }";
+regex_t switchRegex;
 
 typedef struct Switch
 {
@@ -38,19 +40,22 @@ void sendSwitchNotification(SwitchList *switchItem)
 			switchItem->location,
 			timeString,
 			digitalRead(switchItem->gpio));
-        char *switchState = (char *) malloc(sizeof(char));
-	sprintf(switchState, "%d", digitalRead(switchItem->gpio));
-printf("%d translated as %s\n", digitalRead(switchItem->gpio), switchState);
-	printf("%s notification sending to redis\n", switchItem->deviceId);
+
+	char *switchState = (char *)malloc(sizeof(switchItem->deviceId) + 2 * sizeof(char));
+	sprintf(switchState, "%s:%d", switchItem->deviceId, digitalRead(switchItem->gpio));
 
 	sendMessage(NOTIFICATION, switchItem->deviceId, json);
-	sendMessage(SAVESTATE, switchItem->deviceId, switchState);
+	sendMessage(COMMAND, switchState, NULL);
 	printf("%s notification sent to redis\n", switchItem->deviceId);
-
 }
 
 int toggleSwitch(char *switchId)
 {
+	if (regexec(&switchRegex, switchId, 0, NULL, 0))
+	{
+		return 0;
+	}
+
 	SwitchList *current = firstSwitch;
 
 	while (current != NULL)
@@ -59,13 +64,12 @@ int toggleSwitch(char *switchId)
 		{
 			digitalWrite(current->gpio, !digitalRead(current->gpio));
 			sendSwitchNotification(current);
-			return 1;
 		}
 
 		current = current->next;
 	}
 
-	return 0;
+	return 1;
 }
 
 //Public APIs
@@ -97,4 +101,13 @@ void addSwitch(char *switchId, char *display, char *location, int gpio)
 	pinMode(gpio, OUTPUT);
 	digitalWrite(gpio, LOW);
 	sendSwitchNotification(newDevice);
+}
+
+void initSwitch(void)
+{
+	int ret = regcomp(&switchRegex, "switch[0-9]+", 0);
+	if (reti)
+	{
+		logError("[Switch] Regex pattern could not be compiled");
+	}
 }

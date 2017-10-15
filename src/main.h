@@ -9,7 +9,6 @@ extern int state;
 
 void getCurrentTimeInfo(char *timeString, int bufferSize);
 int triggerInternalDevice(char *deviceMessage);
-void triggerDevice(char *deviceMessage);
 
 //Massages to the other worlds
 #define NOTIFICATION 1

@@ -22,6 +22,7 @@ void sendCommandToRedis(redisCallbackFn *fn, char *privdata, const char *format,
         logInfo("[Redis] Command cannot be sent due to client not being connected (%s)", format);
         return;
     }
+
     va_list args;
     va_start(args, format);
     redisvAsyncCommand(globalContext, fn, privdata, format, args);
@@ -68,8 +69,8 @@ void onDeviceDataReceived(redisAsyncContext *c, void *reply, void *privdata)
         r->elements > 1 &&
         strcmp(r->element[0]->str, "type") == 0)
     {
-        char *deviceId = privdata;        
-        logInfo("[Redis] Received data for %s of type %s", (char*)privdata,  r->element[1]->str);
+        char *deviceId = privdata;
+        logInfo("[Redis] Received data for %s of type %s", (char *)privdata, r->element[1]->str);
         initializeDevice(deviceId, r);
     }
 }
@@ -90,7 +91,7 @@ void onExternalCommandReceived(redisAsyncContext *c, void *reply, void *privdata
         {
             if (r->element[j]->str != NULL)
             {
-                logInfo("[Input] Command received");
+                logInfo("[Input] Command received: %s", r->element[j]->str);
                 triggerInternalDevice(r->element[j]->str);
             }
         }
@@ -125,10 +126,10 @@ void onInstanceDevicesReceived(redisAsyncContext *c, void *reply, void *privdata
     int dataIndex;
     for (dataIndex = 0; dataIndex < r->element[1]->elements; dataIndex++)
     {
-        char *deviceId = (char*)malloc(strlen(r->element[1]->element[dataIndex]->str)*sizeof(char));
-	strcpy(deviceId, r->element[1]->element[dataIndex]->str);
+        char *deviceId = (char *)malloc(strlen(r->element[1]->element[dataIndex]->str) * sizeof(char));
+        strcpy(deviceId, r->element[1]->element[dataIndex]->str);
         logInfo("[Redis] Device %s is registered", deviceId);
-     sendCommandToRedis(onDeviceDataReceived, (char*)deviceId, "HGETALL %s", deviceId);
+        sendCommandToRedis(onDeviceDataReceived, (char *)deviceId, "HGETALL %s", deviceId);
     }
 
     //end
@@ -145,18 +146,7 @@ void onInstanceDevicesReceived(redisAsyncContext *c, void *reply, void *privdata
 //-------
 //Redis connection management
 //-------
-void onRedisExternalCommandsConnected(const redisAsyncContext *c, int status)
-{
-    if (status != REDIS_OK)
-    {
-        logError("[Redis] Connection to server failed: %s", c->errstr);
-        return;
-    }
-
-    logInfo("[Redis] External commands context connected to server");
-}
-
-void onRedisGeneralPurposeConnected(const redisAsyncContext *c, int status)
+void onRedisAsyncConnected(const redisAsyncContext *c, int status)
 {
     if (status != REDIS_OK)
     {
@@ -165,11 +155,6 @@ void onRedisGeneralPurposeConnected(const redisAsyncContext *c, int status)
     }
 
     logInfo("[Redis] Connected to server");
-
-    if (!instanceInitialized)
-    {
-        sendCommandToRedis(onInstanceDevicesReceived, NULL, "SSCAN %s 0", instanceId);
-    }
 }
 
 void onRedisAsyncDisconnected(const redisAsyncContext *c, int status)
@@ -199,7 +184,7 @@ void *externalCommandsThreadHandler(void *threadId)
         else
         {
             redisLibeventAttach(c, base);
-            redisAsyncSetConnectCallback(c, onRedisExternalCommandsConnected);
+            redisAsyncSetConnectCallback(c, onRedisAsyncConnected);
             redisAsyncSetDisconnectCallback(c, onRedisAsyncDisconnected);
             redisAsyncCommand(c, onExternalCommandReceived, NULL, "SUBSCRIBE commands");
             event_base_dispatch(base);
@@ -230,8 +215,14 @@ void *generalPurposeThreadHandler(void *threadId)
         else
         {
             redisLibeventAttach(globalContext, base);
-            redisAsyncSetConnectCallback(globalContext, onRedisGeneralPurposeConnected);
+            redisAsyncSetConnectCallback(globalContext, onRedisAsyncConnected);
             redisAsyncSetDisconnectCallback(globalContext, onRedisAsyncDisconnected);
+
+            if (!instanceInitialized)
+            {
+                sendCommandToRedis(onInstanceDevicesReceived, NULL, "SSCAN %s 0", instanceId);
+            }
+
             event_base_dispatch(base);
         }
         globalContext = NULL;
@@ -241,6 +232,18 @@ void *generalPurposeThreadHandler(void *threadId)
 
     logInfo("[Redis] Exit general purpose thread");
     pthread_exit(NULL);
+}
+
+void initializeRedis(void)
+{
+    instanceId = (char *)malloc(512 * sizeof(char));
+    gethostname(instanceId, sizeof(instanceId));
+    logInfo("[Redis] host name is %s", instanceId);
+
+    pthread_t threadExternalCommands;
+    pthread_t threadGeneralPuroose;
+    pthread_create(&threadExternalCommands, NULL, externalCommandsThreadHandler, NULL);
+    pthread_create(&threadGeneralPuroose, NULL, generalPurposeThreadHandler, NULL);
 }
 
 void sendMessage(int channel, char *key, char *data)
@@ -260,27 +263,5 @@ void sendMessage(int channel, char *key, char *data)
         sendCommandToRedis(onRedisCommandSent, NULL, "PUBLISH commands %s", key);
         logInfo("[Portal] Command sent to %s", key);
         break;
-    case SAVESTATE:
-        logInfo("[Portal] Save state to %s", key);
-        sendCommandToRedis(onRedisCommandSent, NULL, "HSET %s state %s", key, data);
-        logInfo("[Portal] State saved to %s", key);
-        break;
     }
-}
-
-void requestDeviceState(char *deviceId)
-{
-    sendCommandToRedis(onDeviceStateReceived, deviceId, "HGET %s state", deviceId);
-}
-
-void initializeRedis(void)
-{
-    instanceId = (char*)malloc(512 * sizeof(char));
-    gethostname(instanceId, sizeof(instanceId));
-    logInfo("[Redis] host name is %s", instanceId);
-
-    pthread_t threadExternalCommands;
-    pthread_t threadGeneralPuroose;
-    pthread_create(&threadExternalCommands, NULL, externalCommandsThreadHandler, NULL);
-    pthread_create(&threadGeneralPuroose, NULL, generalPurposeThreadHandler, NULL);
 }

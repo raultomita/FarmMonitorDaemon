@@ -3,12 +3,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <regex.h>
 
 #include "../main.h"
 #include "devices.h"
 
 const char *wateringStateJsonFormat =
 	"{ \"id\": \"%s\", \"type\": \"watering\", \"display\":\"%s\", \"location\":\"%s\", \"timeStamp\":\"%s\", \"state\": \"%d\" }";
+regex_t wateringRegex;
 
 typedef struct Watering
 {
@@ -122,6 +124,11 @@ void timerCallbackWatering(struct tm *timeinfo)
 
 int triggerWatering(char *deviceId)
 {
+	if (regexec(&wateringRegex, deviceId, 0, NULL, 0))
+	{
+		return 0;
+	}
+
 	WateringList *current = firstWatering;
 
 	while (current != NULL)
@@ -144,4 +151,12 @@ int triggerWatering(char *deviceId)
 	}
 
 	return 0;
+}
+
+void initWatering(){
+	int ret = regcomp(&switchRegex, "watering[0-9]+", 0);
+	if (reti)
+	{
+		logError("[Watering] Regex pattern could not be compiled");
+	}
 }

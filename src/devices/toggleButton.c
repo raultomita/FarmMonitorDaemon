@@ -3,9 +3,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include <regex.h>
 
 #include "../main.h"
 #include "devices.h"
+regex_t toggleButtonRegex;
 
 typedef struct ToggleButton
 {
@@ -45,7 +47,7 @@ void toggleTargetDeviceId(int pinNumber)
 
 			printf("toggleDeficeId %s\n", current->deviceId);
 
-			triggerDevice(current->targetDeviceId);
+			sendMessage(COMMAND, deviceMessage, NULL);
 			return;
 		}
 		current = current->next;
@@ -54,30 +56,33 @@ void toggleTargetDeviceId(int pinNumber)
 
 void setNightWithness(char *targetDeviceId)
 {
-
+	if (regexec(&toggleButtonRegex, targetDeviceId, 0, NULL, 0))
+	{
+		return 0;
+	}
+    int indexOfColon = strcspn(targetDeviceId, ":");
 	ToggleButtonList *current = firstToggleButton;
 	while (current != NULL)
 	{
-		printf("Enter again %d\n", current != NULL);
-		if (strcmp(current->targetDeviceId, targetDeviceId) == 0)
+		if (strncmp(current->targetDeviceId, targetDeviceId, indexOfColon) == 0)
 		{
-			requestDeviceState(current->targetDeviceId);
+
 			// printf("led should be notified after this step %s and state %s\n", current->targetDeviceId, getDeviceState(current->targetDeviceId));
-			// if (strcmp(getDeviceState(current->targetDeviceId), "0") == 0)
-			// {
-			// 	digitalWrite(current->ledGpio, HIGH);
-			// }
-			// else
-			// {
-			// 	digitalWrite(current->ledGpio, LOW);
-			// }
-			printf("led should be notified already\n");
+			 if (targetDeviceId[indexOf + 1] == '1')
+			{
+				digitalWrite(current->ledGpio, HIGH);
+			}
+			else
+			{
+				digitalWrite(current->ledGpio, LOW);
+			}
+		
 		}
-		printf("finish night withness sensor %s\n", current->deviceId);
-		printf("next toggle %d\n", current->next != NULL);
+		
 		current = current->next;
 	}
-	printf("finish night withness\n");
+	
+	return 1;
 }
 
 void addToggleButton(char *toggleButtonId, int gpio, int ledGpio, char *targetDeviceId)
@@ -109,4 +114,12 @@ void addToggleButton(char *toggleButtonId, int gpio, int ledGpio, char *targetDe
 	pullUpDnControl(newDevice->gpio, PUD_UP);
 	printf("Gpio for button: %d\n", newDevice->gpio);
 	wiringPiISR(newDevice->gpio, INT_EDGE_RISING, &toggleTargetDeviceId);
+}
+
+void initToggleButton(){
+	int ret = regcomp(&switchRegex, "swithc[0-9]+:[01]", 0);
+	if (reti)
+	{
+		logError("[ToggleButton] Regex pattern could not be compiled");
+	}
 }
