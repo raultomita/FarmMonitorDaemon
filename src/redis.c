@@ -24,7 +24,7 @@ void sendCommandToRedis(redisCallbackFn *fn, void *privdata, const char *format,
     }
     va_list args;
     va_start(args, format);
-    redisvAsyncCommand(globalContext, redisCallbackFn, privdata, format, args);
+    redisvAsyncCommand(globalContext, fn, privdata, format, args);
     va_end(args);
     logInfo("[Redis] %s", format);
 }
@@ -41,7 +41,7 @@ void onRedisCommandSent(redisAsyncContext *c, void *reply, void *privdata)
         return;
     }
 
-    logInfo("[Redis] command sent";)
+    logInfo("[Redis] command sent");
 }
 
 void onDeviceStateReceived(redisAsyncContext *c, void *reply, void *privdata)
@@ -134,7 +134,7 @@ void onInstanceDevicesReceived(redisAsyncContext *c, void *reply, void *privdata
     //end
     if (strcmp(r->element[0]->str, "0") != 0)
     {
-        sendCommandToRedis(onInstanceDevicesReceived, NULL, "SSCAN %s %s", instanceId, cursor);
+        sendCommandToRedis(onInstanceDevicesReceived, NULL, "SSCAN %s %s", instanceId, r->element[0]->str);
     }
     else
     {
@@ -232,7 +232,7 @@ void sendMessage(int channel, char *key, char *data)
 
 void requestDeviceState(char *deviceId)
 {
-    sendCommandToRedis(onDeviceStateReceived, deviceId, "HSET %s state %s", key, data);
+    sendCommandToRedis(onDeviceStateReceived, deviceId, "HGET %s state", deviceId);
 }
 
 void initializeRedis(void)
