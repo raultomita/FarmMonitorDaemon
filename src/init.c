@@ -13,7 +13,7 @@ char *redisHost = "192.168.1.200";
 int redisPort = 6379;
 int state = LOW;
 
-char *instanceId = "mainframe";
+char *instanceId;
 
 void getCurrentTimeInfo(char *timeString, int bufferSize)
 {

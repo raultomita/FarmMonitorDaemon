@@ -275,6 +275,10 @@ void requestDeviceState(char *deviceId)
 
 void initializeRedis(void)
 {
+    instanceId = (char*)malloc(512 * sizeof(char));
+    gethostname(instanceId, sizeof(instanceId));
+    logInfo("[Redis] host name is %s", instanceId);
+
     pthread_t threadExternalCommands;
     pthread_t threadGeneralPuroose;
     pthread_create(&threadExternalCommands, NULL, externalCommandsThreadHandler, NULL);
