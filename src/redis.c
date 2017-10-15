@@ -7,6 +7,7 @@
 #include <hiredis/hiredis.h>
 #include <hiredis/async.h>
 #include <hiredis/adapters/libevent.h>
+#include <eredis.h>
 
 #include "main.h"
 
@@ -14,6 +15,7 @@ pthread_mutex_t redisMutex = PTHREAD_MUTEX_INITIALIZER;
 volatile int instanceInitialized = 0;
 
 redisAsyncContext *globalContext;
+eredis_t *eredisContext;
 
 void sendCommandToRedis(redisCallbackFn *fn, char *privdata, const char *format, ...)
 {
@@ -243,6 +245,12 @@ void initializeRedis(void)
     gethostname(instanceId, 512);
     logInfo("[Redis] host name is %s", instanceId);
 
+    eredisContext = eredis_new();
+
+    eredis_r_max(eredisContext, 50);
+    eredis_host_add(eredisContext, redisHost, redisPort);
+    eredis_run_thr(eredisContext);
+
     pthread_t threadExternalCommands;
     pthread_t threadGeneralPuroose;
     pthread_create(&threadExternalCommands, NULL, externalCommandsThreadHandler, NULL);
@@ -255,15 +263,15 @@ void sendMessage(int channel, char *key, char *data)
 
     switch (channel)
     {
-    case NOTIFICATION:
+    case NOTIFICATION:    
         logInfo("[Redis] Save notification %s in devices and publish", key);
-        sendCommandToRedis(onRedisCommandSent, NULL, "HSET devices %s %s", key, data);
-        sendCommandToRedis(onRedisCommandSent, NULL, "PUBLISH notifications %s", data);
+        eredis_w_cmd("HSET devices %s %s", key, data);
+        eredis_w_cmd("PUBLISH notifications %s", data);
         logInfo("[Redis] Notification sent to %s", key);
         break;
     case COMMAND:
         logInfo("[Redis] Send external command to %s", key);
-        sendCommandToRedis(onRedisCommandSent, NULL, "PUBLISH commands %s", key);
+        eredis_w_cmd( "PUBLISH commands %s", key);
         logInfo("[Portal] Command sent to %s", key);
         break;
     }
