@@ -8,7 +8,6 @@ extern int redisPort;
 extern int state;
 
 void getCurrentTimeInfo(char *timeString, int bufferSize);
-int initializeDevice(void);
 int triggerInternalDevice(char *deviceMessage);
 void triggerDevice(char *deviceMessage);
 
@@ -20,7 +19,7 @@ void triggerDevice(char *deviceMessage);
 void initializeRedis(void);
 void requestDeviceState(char *deviceId);
 void sendMessage(int channel, char * key, char * data);
-void initializeDevice(char *deviceId, redisReply *r)
+void initializeDevice(char *deviceId, redisReply *r);
 
 //Diagnostic && Logging
 void logInfo (const char * format, ... );
