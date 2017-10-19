@@ -10,7 +10,6 @@
 
 const char *switchJsonFormat =
 	"{ \"id\": \"%s\", \"type\": \"switch\", \"display\":\"%s\", \"location\":\"%s\", \"timeStamp\": \"%s\", \"state\": \"%d\" }";
-regex_t switchRegex;
 
 typedef struct Switch
 {
@@ -24,8 +23,7 @@ SwitchList *firstSwitch, *lastSwitch;
 
 void sendSwitchNotification(SwitchList *switchItem)
 {
-	printf("%s sending\n", switchItem->deviceId);
-
+	logDebug("[Switch] %s notification sending to redis", switchItem->deviceId);
 	char timeString[18];
 	getCurrentTimeInfo(timeString, sizeof(timeString));
 
@@ -41,40 +39,29 @@ void sendSwitchNotification(SwitchList *switchItem)
 			timeString,
 			digitalRead(switchItem->gpio));
 
-	char *switchState = (char *)malloc(sizeof(switchItem->deviceId) + 2 * sizeof(char));
-	sprintf(switchState, "%s:%d", switchItem->deviceId, digitalRead(switchItem->gpio));
-
-	sendMessage(NOTIFICATION, switchItem->deviceId, json);
-	sendMessage(COMMAND, switchState, NULL);
-	printf("%s notification sent to redis\n", switchItem->deviceId);
+	sendNotification(switchItem->deviceId, json);
+	sendCommand("%s:%d", switchItem->deviceId, digitalRead(switchItem->gpio));
+	logDebug("[Switch] %s notification sent to redis", switchItem->deviceId);
 }
 
 int toggleSwitch(char *switchId)
 {
-	logInfo("[Switch] Enter switch for %s", switchId);
-	int ret = regexec(&switchRegex, switchId, 0, NULL, 0);
-	logInfo("[Switch] regExt return %d", ret);
-	if (regexec(&switchRegex, switchId, 0, NULL, 0))
-	{
-		return 0;
-	}
-
 	SwitchList *current = firstSwitch;
 
 	while (current != NULL)
-	{
-		logInfo("[Switch] internal deviceId %s whereas parameter switchId is %s", current->deviceId, switchId);
+	{		
 		if (strcmp(current->deviceId, switchId) == 0)
 		{
+			logDebug("[Switch] Toggle %s", current->deviceId);
 			digitalWrite(current->gpio, !digitalRead(current->gpio));
 			sendSwitchNotification(current);
+			return 1;
 		}
-		logInfo("[Switch] move to next Switch");
-		current = current->next;
-		logInfo("[Switch] moved to next Switch %d", current != NULL);
+		
+		current = current->next;		
 	}
 
-	return 1;
+	return 0;
 }
 
 //Public APIs
@@ -107,12 +94,4 @@ void addSwitch(char *switchId, char *display, char *location, int gpio)
 	pinMode(gpio, OUTPUT);
 	digitalWrite(gpio, LOW);
 	sendSwitchNotification(newDevice);
-}
-
-void initSwitch(void)
-{
-	if (regcomp(&switchRegex, "^switch[0-9*]$", 0))
-	{
-		logError("[Switch] Regex pattern could not be compiled");
-	}
 }

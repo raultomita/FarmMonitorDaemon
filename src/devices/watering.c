@@ -10,7 +10,6 @@
 
 const char *wateringStateJsonFormat =
 	"{ \"id\": \"%s\", \"type\": \"watering\", \"display\":\"%s\", \"location\":\"%s\", \"timeStamp\":\"%s\", \"state\": \"%d\" }";
-regex_t wateringRegex;
 
 typedef struct Watering
 {
@@ -30,7 +29,7 @@ void sendWateringNotification(WateringList *watering)
 	char timeString[18];
 	getCurrentTimeInfo(timeString, sizeof(timeString));
 
-	printf("%s\n", timeString);
+	logDebug("[Watering] %s", timeString);
 
 	char *json = (char *)malloc((strlen(wateringStateJsonFormat) + strlen(timeString) + strlen(watering->deviceId) +
 								 strlen(watering->display) + strlen(watering->location)) *
@@ -41,7 +40,7 @@ void sendWateringNotification(WateringList *watering)
 			watering->location,
 			timeString,
 			digitalRead(watering->commandGpio));
-			sendMessage(NOTIFICATION, watering->deviceId, json);
+	sendNotification(watering->deviceId, json);
 }
 
 void addWatering(char *wateringId, char *display, char *location, int commandGpio, int notifyGpio)
@@ -75,7 +74,7 @@ void addWatering(char *wateringId, char *display, char *location, int commandGpi
 	pinMode(newDevice->notifyGpio, OUTPUT);
 	digitalWrite(newDevice->commandGpio, LOW);
 	digitalWrite(newDevice->notifyGpio, LOW);
-        sendWateringNotification(newDevice);
+	sendWateringNotification(newDevice);
 }
 
 int hasSoilEnoughWater(void)
@@ -125,11 +124,6 @@ void timerCallbackWatering(struct tm *timeinfo)
 
 int triggerWatering(char *deviceId)
 {
-	if (regexec(&wateringRegex, deviceId, 0, NULL, 0))
-	{
-		return 0;
-	}
-
 	WateringList *current = firstWatering;
 
 	while (current != NULL)
@@ -152,11 +146,4 @@ int triggerWatering(char *deviceId)
 	}
 
 	return 0;
-}
-
-void initWatering(){	
-	if (regcomp(&wateringRegex, "watering[0-9]+", 0))
-	{
-		logError("[Watering] Regex pattern could not be compiled");
-	}
 }

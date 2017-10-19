@@ -7,7 +7,6 @@
 
 #include "../main.h"
 #include "devices.h"
-regex_t toggleButtonRegex;
 
 typedef struct ToggleButton
 {
@@ -26,28 +25,29 @@ void toggleTargetDeviceId(int pinNumber)
 	if (digitalRead(pinNumber) == LOW)
 		return;
 
-	printf("toggle pin number %d with value %d\n", pinNumber, digitalRead(pinNumber));
+	logDebug("[ToggleButton] Toggle pin number %d with value %d (target deviced not triggered yet)", pinNumber, digitalRead(pinNumber));
 
 	ToggleButtonList *current = firstToggleButton;
 	while (current != NULL)
 	{
 		if (current->gpio == pinNumber)
 		{
+			logDebug("[ToggleButton] Found toggleDeviceId %s", current->deviceId);
 			time_t rawtime;
 			time(&rawtime);
 			long differenceInSec = (long)rawtime - current->lastTriggerTime;
-			printf("difference is %ld\n", differenceInSec);
-
+			
 			if (differenceInSec < 1)
 			{
+				logDebug("[ToggleButton] Difference from last toggle is too short, skip triggering: %ld", differenceInSec);	
 				return;
 			}
 
+			logDebug("[ToggleButton] Difference from last toggle is valid: %ld", differenceInSec);
+
 			current->lastTriggerTime = (long)rawtime;
 
-			printf("toggleDeficeId %s\n", current->deviceId);
-
-			sendMessage(COMMAND, current->targetDeviceId, NULL);
+			sendCommand(current->targetDeviceId);
 			return;
 		}
 		current = current->next;
@@ -56,19 +56,14 @@ void toggleTargetDeviceId(int pinNumber)
 
 int setNightWithness(char *targetDeviceId)
 {
-	logInfo("[ToggleButton] Enter set night withness %s", targetDeviceId);
-	if (regexec(&toggleButtonRegex, targetDeviceId, 0, NULL, 0))
-	{
-		return 0;
-	}
 	int indexOfColon = strcspn(targetDeviceId, ":");
-	logInfo("[ToggleButton] index of colon %d", indexOfColon);
+	logDebug("[ToggleButton] index of colon %d", indexOfColon);
 	ToggleButtonList *current = firstToggleButton;
 	while (current != NULL)
 	{
 		if (strncmp(current->targetDeviceId, targetDeviceId, indexOfColon) == 0)
 		{
-			logInfo("[ToggleButton] led should be notified after this step %s and state ", current->targetDeviceId);
+			logDebug("[ToggleButton] led should be notified after this step %s and state ", current->targetDeviceId);
 			if (targetDeviceId[indexOfColon + 1] == '0')
 			{
 				digitalWrite(current->ledGpio, HIGH);
@@ -77,12 +72,13 @@ int setNightWithness(char *targetDeviceId)
 			{
 				digitalWrite(current->ledGpio, LOW);
 			}
+			return 1;
 		}
 
 		current = current->next;
 	}
 
-	return 1;
+	return 0;
 }
 
 void addToggleButton(char *toggleButtonId, int gpio, int ledGpio, char *targetDeviceId)
@@ -112,14 +108,6 @@ void addToggleButton(char *toggleButtonId, int gpio, int ledGpio, char *targetDe
 	pinMode(newDevice->gpio, INPUT);
 	pinMode(newDevice->ledGpio, OUTPUT);
 	pullUpDnControl(newDevice->gpio, PUD_UP);
-	printf("Gpio for button: %d\n", newDevice->gpio);
+	logInfo("[ToggleButton] Gpio for button: %d", newDevice->gpio);
 	wiringPiISR(newDevice->gpio, INT_EDGE_RISING, &toggleTargetDeviceId);
-}
-
-void initToggleButton()
-{
-	if (regcomp(&toggleButtonRegex, "^switch[0-9]*:[01]$", 0))
-	{
-		logError("[ToggleButton] Regex pattern could not be compiled");
-	}
 }

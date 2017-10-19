@@ -1,4 +1,3 @@
-#include <pthread.h>
 #include <time.h>
 #include <hiredis/hiredis.h>
 
@@ -6,20 +5,22 @@ extern char* instanceId;
 extern char* redisHost;
 extern int redisPort;
 extern int state;
+extern int debug;
 
 void getCurrentTimeInfo(char *timeString, int bufferSize);
+
+//Dispatcher
 void triggerInternalDevice(char *deviceMessage);
+void addDevice(char *deviceId, redisReply *r);
+void initializeDispatcher();
 
-//Massages to the other worlds
-#define NOTIFICATION 1
-#define COMMAND 2 
-#define SAVESTATE 3
-
+//Redis api
 void initializeRedis(void);
-void requestDeviceState(char *deviceId);
-void sendMessage(int channel, char * key, char * data);
-void initializeDevice(char *deviceId, redisReply *r);
+void sendNotification(char * key, char * data);
+void sendCommand(char *command, ...);
+
 
 //Diagnostic && Logging
+void logDebug (const char * format, ... );
 void logInfo (const char * format, ... );
 void logError (const char * format, ... );

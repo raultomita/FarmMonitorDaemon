@@ -6,27 +6,39 @@
 
 #include "main.h"
 
-const char *infoLogFormat = "INF [%ld] %s\n";
-const char *errorLogFormat = "ERR [%ld] %s\n";
+const char *logFormat = "%s [%ld] %s\n";
 
-void logInfo(const char *format, ...)
+void logDebug(const char *format, ...)
 {
-    char *message = (char *)malloc((strlen(infoLogFormat) + 19 + strlen(format)) * sizeof(char));
-    sprintf(message, infoLogFormat, (long)pthread_self(), format);
+    if (!debug)
+        return;
 
     va_list args;
     va_start(args, format);
-    vprintf(message, args);
+    log("DBG", format, args);
+    va_end(args);
+}
+
+void logInfo(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    log("INF", format, args);
     va_end(args);
 }
 
 void logError(const char *format, ...)
 {
-    char *message = (char *)malloc((strlen(errorLogFormat) + 19 + strlen(format)) * sizeof(char));
-    sprintf(message, errorLogFormat, pthread_self(), format);
-
     va_list args;
     va_start(args, format);
-    vprintf(message, args);
+    log("ERR", format, args);
     va_end(args);
+}
+
+void log(char *type, char *format, va_list args)
+{
+    char *message = (char *)malloc((strlen(logFormat) + 19 + strlen(format) + strlen(type)) * sizeof(char));
+    sprintf(message, logFormat, pthread_self(), format);
+
+    vprintf(message, args);
 }
