@@ -106,35 +106,36 @@ void addDevice(char *deviceId, redisReply *r)
     }
 }
 
-void triggerInternalDevice(char *deviceMessage)
+int triggerInternalDevice(char *deviceMessage)
 {
-    logDebug("[Switch] Enter switch for %s", switchId);
-	int ret = regexec(&switchRegex, switchId, 0, NULL, 0);
-	logInfo("[Switch] regExt return %d", ret);
-	if (regexec(&switchRegex, switchId, 0, NULL, 0))
+    logDebug("[Dispatcher] Trying dispatch command: %s", deviceMessage);
+	
+	if (regexec(&switchRegex, deviceMessage, 0, NULL, 0))
 	{
-		return 0;
+        logDebug("[Dispatcher] Found type: switch");
+        return toggleSwitch(deviceMessage);
     }
     
     if (regexec(&tankLevelRegex, deviceId, 0, NULL, 0))
 	{
-		return 0;
+        logDebug("[Dispatcher] Found type: tankLevel");
+		return triggerTankLevel(deviceMessage);
 	}
 
     logInfo("[ToggleButton] Enter set night withness %s", targetDeviceId);
 	if (regexec(&toggleButtonRegex, targetDeviceId, 0, NULL, 0))
 	{
-		return 0;
+        logDebug("[Dispatcher] Found type: toggleButton");
+		return setNightWithness(deviceMessage);;
 	}
-
     
 	if (regexec(&wateringRegex, deviceId, 0, NULL, 0))
 	{
-		return 0;
-	}
+        logDebug("[Dispatcher] Found type: toggleButton")
+		return triggerWatering(deviceMessage);;
+    }
+    
+    logDebug("[Dispatcher] Command %s not supported", deviceMessage);
 
-	triggerTankLevel(deviceMessage);
-	toggleSwitch(deviceMessage);
-	setNightWithness(deviceMessage);
-	triggerWatering(deviceMessage);
+    return 2;
 }

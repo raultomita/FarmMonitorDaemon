@@ -25,12 +25,6 @@ void getCurrentTimeInfo(char *timeString, int bufferSize)
 	strftime(timeString, bufferSize, "%x %X", timeInfo);
 }
 
-
-
-
-
-
-
 int main(void)
 {
 	//Wait for redis to start. Later will be with containers and we no longer need this line of code.
