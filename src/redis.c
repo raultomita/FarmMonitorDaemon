@@ -183,6 +183,7 @@ void *subscriberThreadHandler(void *threadId)
         }
         else
         {
+    	    logDebug("[Redis] Subscriber context connecting");
             redisLibeventAttach(subscriberContext, base);
             redisAsyncSetConnectCallback(subscriberContext, subscriberContextConnected);
             redisAsyncSetDisconnectCallback(subscriberContext, subscriberContextDisconnected);
@@ -191,7 +192,7 @@ void *subscriberThreadHandler(void *threadId)
         }
         subscriberContext = NULL;
 
-        logDebug("[Redis] Trying to reconnect external commands in 5 sec");
+        logDebug("[Redis] Trying to reconnect subscriber context in 5 sec");
         sleep(5);
     }
 

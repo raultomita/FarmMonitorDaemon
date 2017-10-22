@@ -6,12 +6,15 @@
 
 #include "main.h"
 
-const char *logFormat = "%s [%ld] %s\n";
+const char *logFormat = "%s [%ld] %s: %s\n";
 
 void logMessage(char *type, const char *format, va_list args)
 {
-    char *message= (char *)malloc((strlen(logFormat) + 19 + strlen(format) + strlen(type)) * sizeof(char));
-    sprintf(message, logFormat, type, pthread_self(), format);
+    char timeString[18];
+    getCurrentTimeInfo(timeString, sizeof(timeString));
+
+    char *message = (char *)malloc((strlen(logFormat) + 37 + strlen(format) + strlen(type)) * sizeof(char));
+    sprintf(message, logFormat, type, pthread_self(), timeString, format);
     vprintf(message, args);
 }
 
