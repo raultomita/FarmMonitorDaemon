@@ -5,6 +5,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <hiredis/hiredis.h>
+#include <regex.h>
 
 #include "main.h"
 #include "devices/devices.h"
@@ -116,23 +117,22 @@ int triggerInternalDevice(char *deviceMessage)
         return toggleSwitch(deviceMessage);
     }
     
-    if (regexec(&tankLevelRegex, deviceId, 0, NULL, 0))
+    if (regexec(&tankLevelRegex, deviceMessage, 0, NULL, 0))
 	{
         logDebug("[Dispatcher] Found type: tankLevel");
 		return triggerTankLevel(deviceMessage);
 	}
 
-    logInfo("[ToggleButton] Enter set night withness %s", targetDeviceId);
-	if (regexec(&toggleButtonRegex, targetDeviceId, 0, NULL, 0))
+	if (regexec(&toggleButtonRegex, deviceMessage, 0, NULL, 0))
 	{
         logDebug("[Dispatcher] Found type: toggleButton");
-		return setNightWithness(deviceMessage);;
+		return setNightWithness(deviceMessage);
 	}
     
-	if (regexec(&wateringRegex, deviceId, 0, NULL, 0))
+	if (regexec(&wateringRegex, deviceMessage, 0, NULL, 0))
 	{
-        logDebug("[Dispatcher] Found type: toggleButton")
-		return triggerWatering(deviceMessage);;
+        logDebug("[Dispatcher] Found type: toggleButton");
+		return triggerWatering(deviceMessage);
     }
     
     logDebug("[Dispatcher] Command %s not supported", deviceMessage);

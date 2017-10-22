@@ -8,6 +8,13 @@
 
 const char *logFormat = "%s [%ld] %s\n";
 
+void logMessage(char *type, const char *format, va_list args)
+{
+    char *message= (char *)malloc((strlen(logFormat) + 19 + strlen(format) + strlen(type)) * sizeof(char));
+    sprintf(message, logFormat, type, pthread_self(), format);
+    vprintf(message, args);
+}
+
 void logDebug(const char *format, ...)
 {
     if (!debug)
@@ -15,7 +22,7 @@ void logDebug(const char *format, ...)
 
     va_list args;
     va_start(args, format);
-    log("DBG", format, args);
+    logMessage("DBG", format, args);
     va_end(args);
 }
 
@@ -23,7 +30,7 @@ void logInfo(const char *format, ...)
 {
     va_list args;
     va_start(args, format);
-    log("INF", format, args);
+    logMessage("INF", format, args);
     va_end(args);
 }
 
@@ -31,14 +38,6 @@ void logError(const char *format, ...)
 {
     va_list args;
     va_start(args, format);
-    log("ERR", format, args);
+    logMessage("ERR", format, args);
     va_end(args);
-}
-
-void log(char *type, char *format, va_list args)
-{
-    char *message = (char *)malloc((strlen(logFormat) + 19 + strlen(format) + strlen(type)) * sizeof(char));
-    sprintf(message, logFormat, pthread_self(), format);
-
-    vprintf(message, args);
 }

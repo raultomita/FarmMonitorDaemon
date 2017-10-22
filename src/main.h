@@ -10,7 +10,7 @@ extern int debug;
 void getCurrentTimeInfo(char *timeString, int bufferSize);
 
 //Dispatcher
-void triggerInternalDevice(char *deviceMessage);
+int triggerInternalDevice(char *deviceMessage);
 void addDevice(char *deviceId, redisReply *r);
 void initializeDispatcher();
 

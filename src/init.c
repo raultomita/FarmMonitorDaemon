@@ -2,6 +2,7 @@
 #include <time.h>
 #include <inttypes.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <string.h>
 #include <pthread.h>
 #include <hiredis/hiredis.h>
@@ -13,6 +14,7 @@ char *redisHost = "192.168.1.200";
 int redisPort = 6379;
 int state = LOW;
 int debug = 0;
+int arg;
 
 char *instanceId;
 
@@ -25,8 +27,16 @@ void getCurrentTimeInfo(char *timeString, int bufferSize)
 	strftime(timeString, bufferSize, "%x %X", timeInfo);
 }
 
-int main(void)
+int main(int argc, char** argv)
 {
+	while((arg = getopt(argc, argv, "d")) != -1)
+	{
+		switch(arg){
+		 	case 'd':	
+				debug = 1;
+printf("Debug is enabled\n");
+		}
+	}
 	//Wait for redis to start. Later will be with containers and we no longer need this line of code.
 	delay(2000);
 	//Initializes pins as GPIO numbers

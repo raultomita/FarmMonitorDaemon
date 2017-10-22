@@ -123,13 +123,13 @@ void dataHandler_InstanceDeviceIds(redisAsyncContext *c, void *reply, void *priv
 
     if (strcmp(r->element[0]->str, "0") != 0)
     {
-        logDebug("[Redis] Request next page of assiged devices (cursor: %s).", deviceId);
+        logDebug("[Redis] Request next page of assiged devices (cursor: %s).", r->element[0]->str);
         sendCommandToRedis(dataHandler_InstanceDeviceIds, NULL, "SSCAN %s %s", instanceId, r->element[0]->str);
     }
     else
     {
         instanceInitialized = 1;
-        logDebug("[Redis] All devices are received, subscribe for commands", deviceId);
+        logDebug("[Redis] All devices are received, subscribe for commands");
         subscribeForCommands();
     }
 }
@@ -177,9 +177,9 @@ void *subscriberThreadHandler(void *threadId)
     while (1)
     {
         subscriberContext = redisAsyncConnect(redisHost, redisPort);
-        if (c->err)
+        if (subscriberContext->err)
         {
-            logError("[Redis] External commands thread handler error: %s", c->errstr);
+            logError("[Redis] External commands thread handler error: %s", subscriberContext->errstr);
         }
         else
         {
@@ -219,8 +219,8 @@ void sendNotification(char *key, char *data)
 {
     logDebug("[Redis] Sending notification to %d: %s", key, data);
 
-    eredis_w_cmd(eredisContext, "HSET devices %s %s", key, data);
-    eredis_w_cmd(eredisContext, "PUBLISH notifications %s", data);
+    eredis_w_cmd(globalContext, "HSET devices %s %s", key, data);
+    eredis_w_cmd(globalContext, "PUBLISH notifications %s", data);
 
     logDebug("[Redis] Notification sent", key);
 }
@@ -230,12 +230,12 @@ void sendCommand(char *command, ...)
     va_list args;
     va_start(args, command);
     
-    char *commandPattern = (char *)malloc(sizeof(command) + sizeof(publishCommandTemplate)) * sizeof(char))
+    char *commandPattern = (char *)malloc((sizeof(command) + sizeof(publishCommandTemplate)) * sizeof(char));
     sprintf(commandPattern, publishCommandTemplate, command);
 
     logDebug("[Redis] Sending command %s", commandPattern);
 
-    eredis_w_vcmd(eredisContext, commandPattern, args);
+    eredis_w_vcmd(globalContext, commandPattern, args);
     
     va_end(args);       
     
