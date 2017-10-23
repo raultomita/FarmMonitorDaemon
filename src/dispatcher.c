@@ -43,7 +43,7 @@ void initializeSwitch(char *deviceId, redisReply *r)
 {
     logInfo("[Dispatcher] Init switch with id %s", deviceId);
 
-    if (r->elements == 10 && strcmp(r->element[6]->str, "gpio") == 0)
+    if (r->elements == 8 && strcmp(r->element[6]->str, "gpio") == 0)
     {
         addSwitch(deviceId, r->element[3]->str, r->element[5]->str, strtoimax(r->element[7]->str, NULL, 10));
         logInfo("[Dispatcher] Switch with id %s initialized", deviceId);
@@ -113,24 +113,25 @@ int triggerInternalDevice(char *deviceMessage)
 {
     logDebug("[Dispatcher] Trying dispatch command: %s", deviceMessage);
 
-    if (regexec(&switchRegex, deviceMessage, 1, NULL, 0))
+    if (!regexec(&switchRegex, deviceMessage, 0, NULL, 0))
     {
         logDebug("[Dispatcher] Found type: switch");
         return toggleSwitch(deviceMessage);
     }
 
-    if (regexec(&toggleButtonRegex, deviceMessage, 1, NULL, 0))
+    if (!regexec(&toggleButtonRegex, deviceMessage, 0, NULL, 0))
     {
         logDebug("[Dispatcher] Found type: toggleButton");
         return setNightWithness(deviceMessage);
     }
 
-    if (regexec(&wateringRegex, deviceMessage, 1, NULL, 0))
+    if (!regexec(&wateringRegex, deviceMessage, 0, NULL, 0))
     {
         logDebug("[Dispatcher] Found type: watering");
         return triggerWatering(deviceMessage);
     }
-    if (regexec(&tankLevelRegex, deviceMessage, 1, NULL, 0))
+
+    if (!regexec(&tankLevelRegex, deviceMessage, 0, NULL, 0))
     {
         logDebug("[Dispatcher] Found type:%stankLevel with id", deviceMessage);
         return triggerTankLevel(deviceMessage);
