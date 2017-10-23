@@ -17,7 +17,7 @@ void initializeDispatcher();
 //Redis api
 void initializeRedis(void);
 void sendNotification(char * key, char * data);
-void sendCommand(char *command, ...);
+void sendCommand(char *command);
 
 
 //Diagnostic && Logging

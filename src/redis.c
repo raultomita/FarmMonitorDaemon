@@ -226,19 +226,11 @@ void sendNotification(char *key, char *data)
     logDebug("[Redis] Notification sent", key);
 }
 
-void sendCommand(char *command, ...)
+void sendCommand(char *command)
 {
-    va_list args;
-    va_start(args, command);
-    
-    char *commandPattern = (char *)malloc((sizeof(command) + sizeof(publishCommandTemplate)) * sizeof(char));
-    sprintf(commandPattern, publishCommandTemplate, command);
+    logDebug("[Redis] Sending command %s", command);
 
-    logDebug("[Redis] Sending command %s", commandPattern);
-
-    eredis_w_vcmd(globalContext, commandPattern, args);
-    
-    va_end(args);       
+    eredis_w_cmd(globalContext, command);
     
     logDebug("[Portal] Command sent");
 }

@@ -36,6 +36,7 @@ void initializeDispatcher()
     {
         logError("[Dispatcher] Regex pattern for watering could not be compiled");
     }
+logDebug("[Dispatcher] Initialiazed");
 }
 
 void initializeSwitch(char *deviceId, redisReply *r)
@@ -118,12 +119,6 @@ int triggerInternalDevice(char *deviceMessage)
         logDebug("[Dispatcher] Found type: switch");
         return toggleSwitch(deviceMessage);
     }
-    
-    if (regexec(&tankLevelRegex, deviceMessage, 0, NULL, 0))
-	{
-        logDebug("[Dispatcher] Found type: tankLevel");
-		return triggerTankLevel(deviceMessage);
-	}
 
 	if (regexec(&toggleButtonRegex, deviceMessage, 0, NULL, 0))
 	{
@@ -133,9 +128,14 @@ int triggerInternalDevice(char *deviceMessage)
     
 	if (regexec(&wateringRegex, deviceMessage, 0, NULL, 0))
 	{
-        logDebug("[Dispatcher] Found type: toggleButton");
+        logDebug("[Dispatcher] Found type: watering");
 		return triggerWatering(deviceMessage);
     }
+    if (regexec(&tankLevelRegex, deviceMessage, 0, NULL, 0))
+	{
+        logDebug("[Dispatcher] Found type:%stankLevel with id", deviceMessage);
+		return triggerTankLevel(deviceMessage);
+	}
     
     logDebug("[Dispatcher] Command %s not supported", deviceMessage);
 

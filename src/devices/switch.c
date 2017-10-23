@@ -41,7 +41,11 @@ void sendSwitchNotification(SwitchList *switchItem)
 	logDebug("[Switch] %s notification sending to redis", switchItem->deviceId);
 
 	sendNotification(switchItem->deviceId, json);
-	sendCommand("%s:%d", switchItem->deviceId, digitalRead(switchItem->gpio));
+
+	char *switchState = (char*)malloc((sizeof(switchItem->deviceId)+2) * sizeof(char));
+        sprintf(switchState, "%s:%d", switchItem->deviceId, digitalRead(switchItem->gpio));
+	sendCommand(switchState);
+
 	logDebug("[Switch] %s notification sent to redis", switchItem->deviceId);
 }
 
