@@ -40,17 +40,19 @@ void initializeDispatcher()
 
 void initializeSwitch(char *deviceId, redisReply *r)
 {
-	logInfo("Init switch with id %s", deviceId);
+	logInfo("[Dispatcher] Init switch with id %s", deviceId);
 
 	if (r->elements == 10 && strcmp(r->element[6]->str, "gpio") == 0)
 	{
 		addSwitch(deviceId, r->element[3]->str, r->element[5]->str, strtoimax(r->element[7]->str, NULL, 10));
+	logInfo("[Dispatcher] Switch with id %s initialized", deviceId);
+		
 	}
 }
 
 void initializeTankLevel(char *deviceId, redisReply *r)
 {
-	logInfo("Init switch with id %s", deviceId);
+	logInfo("Init tankLevel with id %s", deviceId);
 
 	if (r->elements == 12 && strcmp(r->element[6]->str, "commandGpio") == 0 &&
 		strcmp(r->element[8]->str, "notifyGpio") == 0 && strcmp(r->element[10]->str, "levelGpio") == 0)

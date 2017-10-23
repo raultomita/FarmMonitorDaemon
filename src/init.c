@@ -45,7 +45,7 @@ printf("Debug is enabled\n");
 	initializeDispatcher();
 
 	initializeRedis();
-
+delay(2000);
 	logInfo("[Main] All initialization methods called. do some idle work");
 
 	//do some idle work

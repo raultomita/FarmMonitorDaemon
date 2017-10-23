@@ -38,6 +38,7 @@ void sendSwitchNotification(SwitchList *switchItem)
 			switchItem->location,
 			timeString,
 			digitalRead(switchItem->gpio));
+	logDebug("[Switch] %s notification sending to redis", switchItem->deviceId);
 
 	sendNotification(switchItem->deviceId, json);
 	sendCommand("%s:%d", switchItem->deviceId, digitalRead(switchItem->gpio));
