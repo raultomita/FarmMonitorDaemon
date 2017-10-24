@@ -64,7 +64,7 @@ int main(int argc, char **argv)
 		timerCallbackWatering(timeInfo);
 		timerCallbackTankLevel(timeInfo);
 
-		if (((long)rawtime - lastHeartBeat) > 10)
+		if (((long)rawtime - lastHeartBeat) > 600)
 		{
 			lastHeartBeat = (long)rawtime;
 			sendCommand("heartbeat");
