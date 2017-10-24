@@ -16,11 +16,6 @@ volatile int instanceInitialized = 0;
 redisAsyncContext *subscriberContext;
 eredis_t *globalContext;
 
-//-------
-//Command templates
-//
-const char* publishCommandTemplate = "PUBLISH commands %s";
-
 void sendCommandToRedis(redisCallbackFn *fn, char *privdata, const char *format, ...)
 {
     if (subscriberContext == NULL)
@@ -230,7 +225,7 @@ void sendCommand(char *command)
 {
     logDebug("[Redis] Sending command %s", command);
 
-    eredis_w_cmd(globalContext, command);
+    eredis_w_cmd(globalContext, "PUBLISH commands %s", command);
     
     logDebug("[Portal] Command sent");
 }
