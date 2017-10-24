@@ -106,9 +106,11 @@ void addToggleButton(char *toggleButtonId, int gpio, int ledGpio, char *targetDe
 
 	newDevice->lastTriggerTime = 0;
 	newDevice->next = NULL;
+	
 	pinMode(newDevice->gpio, INPUT);
 	pinMode(newDevice->ledGpio, OUTPUT);
-	pullUpDnControl(newDevice->gpio, PUD_UP);
-	logInfo("[ToggleButton] Gpio for button: %d", newDevice->gpio);
+	pullUpDnControl(newDevice->gpio, PUD_UP);	
 	wiringPiISR(newDevice->gpio, INT_EDGE_RISING, &toggleTargetDeviceId);
+
+	logInfo("[ToggleButton] Gpio for button: %d", newDevice->gpio);
 }

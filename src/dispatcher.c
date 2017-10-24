@@ -137,6 +137,12 @@ int triggerInternalDevice(char *deviceMessage)
         return triggerTankLevel(deviceMessage);
     }
 
+    if (strcmp("heartbeat", deviceMessage) == 0)
+    {
+        logDebug("[Dispatcher] Heartbeat acknowledged", deviceMessage);
+        return 1;
+    }
+
     logDebug("[Dispatcher] Command %s not supported", deviceMessage);
 
     return 2;

@@ -27,30 +27,32 @@ void getCurrentTimeInfo(char *timeString, int bufferSize)
 	strftime(timeString, bufferSize, "%x %X", timeInfo);
 }
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
-	while((arg = getopt(argc, argv, "d")) != -1)
+	while ((arg = getopt(argc, argv, "d")) != -1)
 	{
-		switch(arg){
-		 	case 'd':	
-				debug = 1;
-printf("Debug is enabled\n");
+		switch (arg)
+		{
+		case 'd':
+			debug = 1;
+			printf("Debug is enabled\n");
 		}
 	}
-	//Wait for redis to start. Later will be with containers and we no longer need this line of code.
-	delay(2000);
+
 	//Initializes pins as GPIO numbers
 	wiringPiSetupGpio();
 
 	initializeDispatcher();
 
 	initializeRedis();
-delay(2000);
+
 	logInfo("[Main] All initialization methods called. do some idle work");
 
 	//do some idle work
 	time_t rawtime;
 	struct tm *timeInfo;
+	time(&rawtime);
+	long lastHeartBeat = (long)rawtime;
 
 	while (1)
 	{
@@ -62,6 +64,11 @@ delay(2000);
 		timerCallbackWatering(timeInfo);
 		timerCallbackTankLevel(timeInfo);
 
+		if (((long)rawtime - lastHeartBeat) > 10)
+		{
+			lastHeartBeat = (long)rawtime;
+			sendCommand("heartbeat");
+		}
 		delay(1000);
 	}
 	return 0;
