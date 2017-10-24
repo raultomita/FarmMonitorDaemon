@@ -104,6 +104,7 @@ void addToggleButton(char *toggleButtonId, int gpio, int ledGpio, char *targetDe
 		lastToggleButton = newDevice;
 	}
 
+	newDevice->lastTriggerTime = 0;
 	newDevice->next = NULL;
 	pinMode(newDevice->gpio, INPUT);
 	pinMode(newDevice->ledGpio, OUTPUT);
