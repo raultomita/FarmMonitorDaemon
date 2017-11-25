@@ -124,8 +124,8 @@ void dataHandler_InstanceDeviceIds(redisAsyncContext *c, void *reply, void *priv
     else
     {
         instanceInitialized = 1;
-        logDebug("[Redis] All devices are received, subscribe for commands");
-        subscribeForCommands();
+        logDebug("[Redis] All devices are received, subscribe from local in order to connect to remote");
+        redisAsyncDisconnect(subscriberContext);
     }
 }
 
@@ -171,7 +171,14 @@ void *subscriberThreadHandler(void *threadId)
 
     while (1)
     {
-        subscriberContext = redisAsyncConnect(redisHost, redisPort);
+        if (!instanceInitialized)
+        {
+              subscriberContext = redisAsyncConnect("127.0.0.1", redisPort);
+        }
+        else
+{
+              subscriberContext = redisAsyncConnect(redisHost, redisPort);
+}
         if (subscriberContext->err)
         {
             logError("[Redis] External commands thread handler error: %s", subscriberContext->errstr);
