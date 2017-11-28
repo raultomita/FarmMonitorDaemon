@@ -11,6 +11,7 @@ void getCurrentTimeInfo(char *timeString, int bufferSize);
 
 //Dispatcher
 int triggerInternalDevice(char *deviceMessage);
+void triggerDevice(char *deviceMessage);
 void addDevice(char *deviceId, redisReply *r);
 void initializeDispatcher();
 

@@ -47,7 +47,7 @@ void toggleTargetDeviceId(int pinNumber)
 
 			current->lastTriggerTime = (long)rawtime;
 
-			sendCommand(current->targetDeviceId);
+			triggerDevice(current->targetDeviceId);
 			return;
 		}
 		current = current->next;

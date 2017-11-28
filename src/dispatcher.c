@@ -147,3 +147,7 @@ int triggerInternalDevice(char *deviceMessage)
 
     return 2;
 }
+void triggerDevice(char *deviceMessage)
+{
+     if(triggerInternalDevice(deviceMessage) == 0) sendCommand(deviceMessage);
+}
