@@ -13,6 +13,10 @@ void timerCallbackWatering(struct tm *timeinfo);
 void addToggleButton(char *toggleButtonId, int gpio, int ledGpio, char *targetDeviceId);
 int setNightWithness(char *targetDeviceId);
 
+//Automatic trigger public button
+void addautomaticTrigger(char *automaticTriggerId, char *targetDeviceId, char * listenOnDeviceId);
+void scheduleAutomaticTrigger(char *targetDeviceId);
+void timerCallbackAutomaticTrigger(time_t rawtime);
 //Tank level public methods
 void addTankLevel(char *tankLevelId, char *display, char *location, int commandGpio, int notifyGpio, int levelGpio);
 int triggerTankLevel(char *deviceId);

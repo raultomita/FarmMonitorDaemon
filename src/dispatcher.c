@@ -13,6 +13,8 @@
 regex_t switchRegex;
 regex_t tankLevelRegex;
 regex_t toggleButtonRegex;
+regex_t automaticTriggerRegex;
+
 regex_t wateringRegex;
 
 void initializeDispatcher()
@@ -35,6 +37,10 @@ void initializeDispatcher()
     if (regcomp(&wateringRegex, "^watering[0-9]*$", REG_EXTENDED))
     {
         logError("[Dispatcher] Regex pattern for watering could not be compiled");
+    }
+    if (regcomp(&automaticTriggerRegex, "^automaticTrigger[0-9]*$", REG_EXTENDED))
+    {
+        logError("[Dispatcher] Regex pattern for automatic trigger could not be compiled");
     }
     logDebug("[Dispatcher] Initialiazed");
 }
@@ -84,6 +90,16 @@ void initializeToggleButton(char *deviceId, redisReply *r)
     }
 }
 
+void initializeAutomaticTrigger(char *deviceId, redisReply *r)
+{
+    logInfo("Init automatic trigger with id %s", deviceId);
+
+    if (r->elements == 6 && strcmp(r->element[2]->str, "targetDeviceId") == 0 && strcmp(r->element[4]->str, "listenOnDeviceId") == 0)
+    {
+        addautomaticTrigger(deviceId, r->element[3]->str, r->element[5]->str);
+    }
+}
+
 void addDevice(char *deviceId, redisReply *r)
 {
     if (r->type == REDIS_REPLY_ARRAY &&
@@ -105,6 +121,10 @@ void addDevice(char *deviceId, redisReply *r)
         else if (strcmp(r->element[1]->str, "toggleButton") == 0)
         {
             initializeToggleButton(deviceId, r);
+        }
+        else if (strcmp(r->element[1]->str, "automaticTrigger") == 0)
+        {
+            initializeAutomaticTrigger(deviceId, r);
         }
     }
 }
