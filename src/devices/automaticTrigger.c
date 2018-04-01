@@ -30,6 +30,7 @@ void addautomaticTrigger(char *automaticTriggerId, char *targetDeviceId, char * 
 	strcpy(newDevice->targetDeviceId, targetDeviceId);
 
     newDevice->listenOnDeviceId = malloc(strlen(listenOnDeviceId) * sizeof(char));
+	strcpy(newDevice->listenOnDeviceId, listenOnDeviceId);
 
 	if (firstAutomaticTrigger == NULL)
 	{
@@ -46,7 +47,7 @@ void addautomaticTrigger(char *automaticTriggerId, char *targetDeviceId, char * 
 	newDevice->next = NULL;
 }
 
-void scheduleAutomaticTrigger(char *listenOnDeviceId){
+int scheduleAutomaticTrigger(char *listenOnDeviceId){
 	int indexOfColon = strcspn(listenOnDeviceId, ":");
 	logDebug("[AutomaticTrigger] index of colon %d", indexOfColon);
 	AutomaticTriggerList *current = firstAutomaticTrigger;
@@ -54,13 +55,14 @@ void scheduleAutomaticTrigger(char *listenOnDeviceId){
 	{
 		if (strncmp(current->listenOnDeviceId, listenOnDeviceId, indexOfColon) == 0)
 		{
-			logDebug("[AutomaticTrigger] led should be notified after this step %s and state ", current->listenOnDeviceId);
+			logDebug("[AutomaticTrigger] device should be notified after this step %s and state ", current->listenOnDeviceId);
 			if (listenOnDeviceId[indexOfColon + 1] == '0')
 			{
-				if(current.switchOnAt == -1){
+				if(current->switchOnAt == -1){
 					triggerDevice(current->targetDeviceId);			
 				
-				logDebug("[AutomaticTrigger] Trigger device: %ld", current->targetDeviceId);
+				logDebug("[AutomaticTrigger] Trigger device: %s", current->targetDeviceId);
+                                }
 				current->switchOnAt = 0;				
 			}
 			else
@@ -74,6 +76,10 @@ void scheduleAutomaticTrigger(char *listenOnDeviceId){
 			}
 			return 1;
 		}
+else
+{
+	logDebug("[AutomaticTrigger] not found %s", listenOnDeviceId);
+}
 
 		current = current->next;
 	}
@@ -86,10 +92,10 @@ void timerCallbackAutomaticTrigger(time_t rawtime)
 	AutomaticTriggerList *current = firstAutomaticTrigger;
 	while (current != NULL)
 	{
-		if(current.switchOnAt > 0 && ((long)rawtime - current->switchOnAt) > 5){
+		if(current->switchOnAt > 0 && ((long)rawtime - current->switchOnAt) > 300){
 			triggerDevice(current->targetDeviceId);
 			logDebug("[AutomaticTrigger] Trigger device: %ld", current->targetDeviceId);
-			current.switchOnAt = -1;
+			current->switchOnAt = -1;
 		}
 
 		current = current->next;

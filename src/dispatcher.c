@@ -12,8 +12,7 @@
 
 regex_t switchRegex;
 regex_t tankLevelRegex;
-regex_t toggleButtonRegex;
-regex_t automaticTriggerRegex;
+regex_t switchStateRegex;
 
 regex_t wateringRegex;
 
@@ -29,18 +28,14 @@ void initializeDispatcher()
         logError("[Dispatcher] Regex pattern for tankLevel could not be compiled");
     }
 
-    if (regcomp(&toggleButtonRegex, "^switch[0-9]*:[01]$", REG_EXTENDED))
+    if (regcomp(&switchStateRegex, "^switch[0-9]*:[01]$", REG_EXTENDED))
     {
-        logError("[Dispatcher] Regex pattern for toggleButton could not be compiled");
+        logError("[Dispatcher] Regex pattern for switch state could not be compiled");
     }
 
     if (regcomp(&wateringRegex, "^watering[0-9]*$", REG_EXTENDED))
     {
         logError("[Dispatcher] Regex pattern for watering could not be compiled");
-    }
-    if (regcomp(&automaticTriggerRegex, "^automaticTrigger[0-9]*$", REG_EXTENDED))
-    {
-        logError("[Dispatcher] Regex pattern for automatic trigger could not be compiled");
     }
     logDebug("[Dispatcher] Initialiazed");
 }
@@ -139,9 +134,10 @@ int triggerInternalDevice(char *deviceMessage)
         return toggleSwitch(deviceMessage);
     }
 
-    if (!regexec(&toggleButtonRegex, deviceMessage, 0, NULL, 0))
+    if (!regexec(&switchStateRegex, deviceMessage, 0, NULL, 0))
     {
-        logDebug("[Dispatcher] Found type: toggleButton");
+        logDebug("[Dispatcher] Found type: switchState");
+        scheduleAutomaticTrigger(deviceMessage);
         return setNightWithness(deviceMessage);
     }
 

@@ -63,7 +63,7 @@ int main(int argc, char **argv)
 
 		timerCallbackWatering(timeInfo);
 		timerCallbackTankLevel(timeInfo);
-		timerCallbackAutomaticTrigger(rawtime)
+		timerCallbackAutomaticTrigger(rawtime);
 		if (((long)rawtime - lastHeartBeat) > 600)
 		{
 			lastHeartBeat = (long)rawtime;
