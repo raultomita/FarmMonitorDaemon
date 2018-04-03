@@ -92,7 +92,7 @@ void timerCallbackAutomaticTrigger(time_t rawtime)
 	AutomaticTriggerList *current = firstAutomaticTrigger;
 	while (current != NULL)
 	{
-		if(current->switchOnAt > 0 && ((long)rawtime - current->switchOnAt) > 300){
+		if(current->switchOnAt > 0 && ((long)rawtime - current->switchOnAt) > 180){
 			triggerDevice(current->targetDeviceId);
 			logDebug("[AutomaticTrigger] Trigger device: %ld", current->targetDeviceId);
 			current->switchOnAt = -1;
