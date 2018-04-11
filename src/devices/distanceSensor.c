@@ -49,11 +49,11 @@ int setTargetStatus(char *targetDeviceId)
 		{			
 			if (targetDeviceId[indexOfColon + 1] == '0')
 			{
-				current->targetStatus = HIGH;
+				current->targetStatus = LOW;
 			}
 			else
 			{
-				current->targetStatus = LOW;
+				current->targetStatus = HIGH;
 			}
 			logDebug("[DistanceSensor] State is saved after this step %s and state %d", current->targetDeviceId, current->targetStatus);
 			return 1;
