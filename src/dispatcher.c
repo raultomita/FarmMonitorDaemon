@@ -152,6 +152,7 @@ int triggerInternalDevice(char *deviceMessage)
     {
         logDebug("[Dispatcher] Found type: switchState");
         scheduleAutomaticTrigger(deviceMessage);
+        setTargetStatus(deviceMessage);
         return setNightWithness(deviceMessage);
     }
 
