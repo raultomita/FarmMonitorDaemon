@@ -30,7 +30,7 @@ void distanceChanged(int pinNumber)
 		if (current->gpio == pinNumber && current->previousState != digitalRead(pinNumber))
 		{			
 			current->previousState = digitalRead(pinNumber);
-			logDebug("[DistanceSensor] Found distanceSensor %s and changed value is %s", current->deviceId, digitalRead(pinNumber));
+			logDebug("[DistanceSensor] Found distanceSensor %s %d", current->deviceId, digitalRead(pinNumber));
 		
 			//char *switchState = (char*)malloc((sizeof(current->deviceId)+2) * sizeof(char));
     		//sprintf(switchState, "%s:%d", current->deviceId, digitalRead(current->gpio));
@@ -45,8 +45,8 @@ void distanceChanged(int pinNumber)
 void addDistanceSensor(char *distanceSensorId, int gpio, char *targetDeviceId)
 {
 	DistanceSensorList *newDevice = malloc(sizeof(DistanceSensorList));
-	newDevice->deviceId = malloc(strlen(DistanceSensorId) * sizeof(char));
-	strcpy(newDevice->deviceId, DistanceSensorId);
+	newDevice->deviceId = malloc(strlen(distanceSensorId) * sizeof(char));
+	strcpy(newDevice->deviceId, distanceSensorId);
 
 	newDevice->targetDeviceId = malloc(strlen(targetDeviceId) * sizeof(char));
 	strcpy(newDevice->targetDeviceId, targetDeviceId);
@@ -65,7 +65,7 @@ void addDistanceSensor(char *distanceSensorId, int gpio, char *targetDeviceId)
 	}
 
 	newDevice->next = NULL;
-	newDeivice->previousState = LOW;
+	newDevice->previousState = LOW;
 	pinMode(newDevice->gpio, INPUT);
 	pullUpDnControl(newDevice->gpio, PUD_UP);	
 	wiringPiISR(newDevice->gpio, INT_EDGE_RISING, &distanceChanged);
