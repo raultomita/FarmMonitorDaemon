@@ -43,7 +43,7 @@ void sendSwitchNotification(SwitchList *switchItem)
 	sendNotification(switchItem->deviceId, json);
 
 	char *switchState = (char*)malloc((sizeof(switchItem->deviceId)+2) * sizeof(char));
-        sprintf(switchState, "%s:%d", switchItem->deviceId, digitalRead(switchItem->gpio));
+    sprintf(switchState, "%s:%d", switchItem->deviceId, digitalRead(switchItem->gpio));
 	triggerDevice(switchState);
 
 	logDebug("[Switch] %s notification sent to redis", switchItem->deviceId);

@@ -13,7 +13,6 @@
 regex_t switchRegex;
 regex_t tankLevelRegex;
 regex_t switchStateRegex;
-
 regex_t wateringRegex;
 
 void initializeDispatcher()
@@ -37,6 +36,7 @@ void initializeDispatcher()
     {
         logError("[Dispatcher] Regex pattern for watering could not be compiled");
     }
+
     logDebug("[Dispatcher] Initialiazed");
 }
 
@@ -95,6 +95,16 @@ void initializeAutomaticTrigger(char *deviceId, redisReply *r)
     }
 }
 
+void initializeDistanceSensor(char *deviceId, redisReply *r)
+{
+    logInfo("Init distance sensor with id %s", deviceId);
+
+   if (r->elements == 6 && strcmp(r->element[2]->str, "gpio") == 0 && strcmp(r->element[4]->str, "targetDeviceId") == 0)
+    {
+        addDistanceSensor(deviceId, strtoimax(r->element[3]->str, NULL, 10), r->element[5]->str);
+    }
+}
+
 void addDevice(char *deviceId, redisReply *r)
 {
     if (r->type == REDIS_REPLY_ARRAY &&
@@ -120,6 +130,10 @@ void addDevice(char *deviceId, redisReply *r)
         else if (strcmp(r->element[1]->str, "automaticTrigger") == 0)
         {
             initializeAutomaticTrigger(deviceId, r);
+        }
+        else  if (strcmp(r->element[1]->str, "distanceSensor") == 0)
+        {
+            initializeDistanceSensor(deviceId, r);
         }
     }
 }
