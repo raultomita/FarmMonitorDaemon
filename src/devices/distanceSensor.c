@@ -88,7 +88,7 @@ void addDistanceSensor(char *distanceSensorId, int gpio, char *targetDeviceId)
 	}
 
 	newDevice->next = NULL;
-	newDevice->previousState = LOW;
+	newDevice->targetStatus = LOW;
 	pinMode(newDevice->gpio, INPUT);
 	pullUpDnControl(newDevice->gpio, PUD_UP);	
 	wiringPiISR(newDevice->gpio, INT_EDGE_RISING, &distanceChanged);
