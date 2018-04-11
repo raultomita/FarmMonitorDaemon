@@ -12,7 +12,7 @@ typedef struct DistanceSensor
 {
 	char *deviceId;
 	int gpio;
-	int previousState;
+	int targetStatus;
 	char *targetDeviceId;
 	struct DistanceSensor *next;
 
@@ -27,20 +27,43 @@ void distanceChanged(int pinNumber)
 	DistanceSensorList *current = firstDistanceSensor;
 	while (current != NULL)
 	{
-		if (current->gpio == pinNumber && current->previousState != digitalRead(pinNumber))
+		if (current->gpio == pinNumber && digitalRead(pinNumber) == LOW && current->targetStatus == HIGH)
 		{			
-			current->previousState = digitalRead(pinNumber);
+			current->targetStatus = LOW;
 			logDebug("[DistanceSensor] Found distanceSensor %s %d", current->deviceId, digitalRead(pinNumber));
-		
-			//char *switchState = (char*)malloc((sizeof(current->deviceId)+2) * sizeof(char));
-    		//sprintf(switchState, "%s:%d", current->deviceId, digitalRead(current->gpio));
-			//triggerDevice(switchState);
+			triggerDevice(current->targetDeviceId);
 			return;
 		}
 		current = current->next;
 	}
 }
 
+int setTargetStatus(char *targetDeviceId)
+{
+	int indexOfColon = strcspn(targetDeviceId, ":");
+	logDebug("[DistanceSensor] index of colon %d", indexOfColon);
+	DistanceSensorList *current = firstDistanceSensor;
+	while (current != NULL)
+	{
+		if (strncmp(current->targetDeviceId, targetDeviceId, indexOfColon) == 0)
+		{			
+			if (targetDeviceId[indexOfColon + 1] == '0')
+			{
+				current->targetStatus = HIGH;
+			}
+			else
+			{
+				current->targetStatus = LOW;
+			}
+			logDebug("[DistanceSensor] State is saved after this step %s and state %d", current->targetDeviceId, current->targetStatus);
+			return 1;
+		}
+
+		current = current->next;
+	}
+
+	return 0;
+}
 
 void addDistanceSensor(char *distanceSensorId, int gpio, char *targetDeviceId)
 {
