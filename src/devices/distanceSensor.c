@@ -12,6 +12,7 @@ typedef struct DistanceSensor
 {
 	char *deviceId;
 	int gpio;
+	int previousState;
 	char *targetDeviceId;
 	struct DistanceSensor *next;
 
@@ -21,15 +22,16 @@ DistanceSensorList *firstDistanceSensor, *lastDistanceSensor;
 void distanceChanged(int pinNumber)
 {
 	
-	logDebug("[DistanceSensor] Distance pin number %d with value %d (target deviced not triggered yet)", pinNumber, digitalRead(pinNumber));
+	
 
 	DistanceSensorList *current = firstDistanceSensor;
 	while (current != NULL)
 	{
-		if (current->gpio == pinNumber)
-		{
-			logDebug("[DistanceSensor] Found distanceSensor %s", current->deviceId);
-			
+		if (current->gpio == pinNumber && current->previousState != digitalRead(pinNumber))
+		{			
+			current->previousState = digitalRead(pinNumber);
+			logDebug("[DistanceSensor] Found distanceSensor %s and changed value is %s", current->deviceId, digitalRead(pinNumber));
+		
 			//char *switchState = (char*)malloc((sizeof(current->deviceId)+2) * sizeof(char));
     		//sprintf(switchState, "%s:%d", current->deviceId, digitalRead(current->gpio));
 			//triggerDevice(switchState);
@@ -63,7 +65,7 @@ void addDistanceSensor(char *distanceSensorId, int gpio, char *targetDeviceId)
 	}
 
 	newDevice->next = NULL;
-	
+	newDeivice->previousState = LOW;
 	pinMode(newDevice->gpio, INPUT);
 	pullUpDnControl(newDevice->gpio, PUD_UP);	
 	wiringPiISR(newDevice->gpio, INT_EDGE_RISING, &distanceChanged);
