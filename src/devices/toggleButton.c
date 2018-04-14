@@ -56,6 +56,7 @@ void toggleTargetDeviceId(int pinNumber)
 
 int setNightWithness(char *targetDeviceId)
 {
+        int found = 0;
 	int indexOfColon = strcspn(targetDeviceId, ":");
 	logDebug("[ToggleButton] index of colon %d", indexOfColon);
 	ToggleButtonList *current = firstToggleButton;
@@ -72,13 +73,13 @@ int setNightWithness(char *targetDeviceId)
 			{
 				digitalWrite(current->ledGpio, LOW);
 			}
-			return 1;
+			found = 1;
 		}
 
 		current = current->next;
 	}
 
-	return 0;
+	return found;
 }
 
 void addToggleButton(char *toggleButtonId, int gpio, int ledGpio, char *targetDeviceId)
