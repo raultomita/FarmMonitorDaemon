@@ -14,6 +14,8 @@ typedef struct DistanceSensor
 	int gpio;
 	int targetStatus;
 	char *targetDeviceId;
+	int invertState;
+	long lastTriggerTime;
 	struct DistanceSensor *next;
 
 } DistanceSensorList;
@@ -21,17 +23,32 @@ DistanceSensorList *firstDistanceSensor, *lastDistanceSensor;
 
 void distanceChanged(int pinNumber)
 {
-	
-	
+	logDebug("[DistanceSensor] Found distance %d", digitalRead(pinNumber));
 
 	DistanceSensorList *current = firstDistanceSensor;
 	while (current != NULL)
 	{
-		if (current->gpio == pinNumber && digitalRead(pinNumber) == LOW && current->targetStatus == HIGH)
-		{			
-			current->targetStatus = LOW;
-			logDebug("[DistanceSensor] Found distanceSensor %s %d", current->deviceId, digitalRead(pinNumber));
-			triggerDevice(current->targetDeviceId);
+		if (current->gpio == pinNumber)
+		{		
+		    if (current->invertState == 1){
+				time_t rawtime;
+			    time(&rawtime);
+			    long differenceInSec = (long)rawtime - current->lastTriggerTime;
+			
+				if(differenceInSec > 1 && digitalRead(pinNumber) == LOW){
+					logDebug("[DistanceSensor] Trigger device %s", current->targetDeviceId);
+					current->lastTriggerTime = (long)rawtime;
+					triggerDevice(current->targetDeviceId);
+
+				}
+
+			}
+			else if (digitalRead(pinNumber) == LOW && current->targetStatus == HIGH)
+			{
+				current->targetStatus = LOW;
+				logDebug("[DistanceSensor] Turn OFF device %s", current->targetDeviceId);
+				triggerDevice(current->targetDeviceId);
+			}
 			return;
 		}
 		current = current->next;
@@ -65,7 +82,7 @@ int setTargetStatus(char *targetDeviceId)
 	return 0;
 }
 
-void addDistanceSensor(char *distanceSensorId, int gpio, char *targetDeviceId)
+void addDistanceSensor(char *distanceSensorId, int gpio, char *targetDeviceId, int invertState)
 {
 	DistanceSensorList *newDevice = malloc(sizeof(DistanceSensorList));
 	newDevice->deviceId = malloc(strlen(distanceSensorId) * sizeof(char));
@@ -75,6 +92,7 @@ void addDistanceSensor(char *distanceSensorId, int gpio, char *targetDeviceId)
 	strcpy(newDevice->targetDeviceId, targetDeviceId);
 
 	newDevice->gpio = gpio;
+	newDevice->invertState = invertState;
 
 	if (firstDistanceSensor == NULL)
 	{

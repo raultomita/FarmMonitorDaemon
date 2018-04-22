@@ -19,7 +19,7 @@ int scheduleAutomaticTrigger(char *targetDeviceId);
 void timerCallbackAutomaticTrigger(time_t rawtime);
 
 //Distance sensor
-void addDistanceSensor(char *distanceSensorId, int gpio, char *targetDeviceId);
+void addDistanceSensor(char *distanceSensorId, int gpio, char *targetDeviceId, int invertState);
 int setTargetStatus(char *targetDeviceId);
 //Tank level public methods
 void addTankLevel(char *tankLevelId, char *display, char *location, int commandGpio, int notifyGpio, int levelGpio);

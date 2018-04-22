@@ -99,9 +99,9 @@ void initializeDistanceSensor(char *deviceId, redisReply *r)
 {
     logInfo("Init distance sensor with id %s", deviceId);
 
-   if (r->elements == 6 && strcmp(r->element[2]->str, "gpio") == 0 && strcmp(r->element[4]->str, "targetDeviceId") == 0)
+   if (r->elements == 8 && strcmp(r->element[2]->str, "gpio") == 0 && strcmp(r->element[4]->str, "targetDeviceId") == 0 && strcmp(r->element[6]->str, "invertState") == 0)
     {
-        addDistanceSensor(deviceId, strtoimax(r->element[3]->str, NULL, 10), r->element[5]->str);
+        addDistanceSensor(deviceId, strtoimax(r->element[3]->str, NULL, 10), r->element[5]->str, strtoimax(r->element[7]->str, NULL, 10));
     }
 }
 
