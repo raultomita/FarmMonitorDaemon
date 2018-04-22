@@ -105,6 +105,7 @@ void addDistanceSensor(char *distanceSensorId, int gpio, char *targetDeviceId, i
 		lastDistanceSensor = newDevice;
 	}
 
+	newDevice->lastTriggerTime = 0;
 	newDevice->next = NULL;
 	newDevice->targetStatus = LOW;
 	pinMode(newDevice->gpio, INPUT);
