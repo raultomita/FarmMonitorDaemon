@@ -72,14 +72,14 @@ int scheduleAutomaticTrigger(char *listenOnDeviceId){
 
 				logDebug("[AutomaticTrigger] Start counting: %ld", rawtime);
 
-			current->switchOnAt = (long)rawtime;
+				current->switchOnAt = (long)rawtime;
 			}
 			return 1;
 		}
-else
-{
-	logDebug("[AutomaticTrigger] not found %s", listenOnDeviceId);
-}
+		else
+		{
+			logDebug("[AutomaticTrigger] not found %s", listenOnDeviceId);
+		}
 
 		current = current->next;
 	}
