@@ -12,6 +12,7 @@ typedef struct AutomaticTrigger
 {
 	char *deviceId;	
 	char *targetDeviceId;
+	int targetDeviceState;
     char *listenOnDeviceId;
 	struct AutomaticTrigger *next;
 	long switchOnAt;
@@ -43,6 +44,7 @@ void addautomaticTrigger(char *automaticTriggerId, char *targetDeviceId, char * 
 		lastAutomaticTrigger = newDevice;
 	}
 
+	newDevice->targetDeviceState=0;
 	newDevice->switchOnAt = 0;
 	newDevice->next = NULL;
 }
@@ -53,16 +55,25 @@ int scheduleAutomaticTrigger(char *listenOnDeviceId){
 	AutomaticTriggerList *current = firstAutomaticTrigger;
 	while (current != NULL)
 	{
+		if (strncmp(current->targetDeviceId, listenOnDeviceId, indexOfColon) == 0){
+			if (listenOnDeviceId[indexOfColon + 1] == '0')
+			{
+				current->targetDeviceState = 0;
+			}
+			else
+			{
+				current->targetDeviceState = 1;
+			}
+			logDebug("[AutomaticTrigger] device state %s: %d", current->targetDeviceId, current->targetDeviceState);		
+		}
+		
+
 		if (strncmp(current->listenOnDeviceId, listenOnDeviceId, indexOfColon) == 0)
 		{
 			logDebug("[AutomaticTrigger] device should be notified after this step %s and state ", current->listenOnDeviceId);
 			if (listenOnDeviceId[indexOfColon + 1] == '0')
 			{
-				if(current->switchOnAt == -1){
-					triggerDevice(current->targetDeviceId);			
-				
-				logDebug("[AutomaticTrigger] Trigger device: %s", current->targetDeviceId);
-                                }
+				logDebug("[AutomaticTrigger] Switch off, not triggered yet: %s", current->targetDeviceId);
 				current->switchOnAt = 0;				
 			}
 			else
@@ -92,10 +103,16 @@ void timerCallbackAutomaticTrigger(time_t rawtime)
 	AutomaticTriggerList *current = firstAutomaticTrigger;
 	while (current != NULL)
 	{
-		if(current->switchOnAt > 0 && ((long)rawtime - current->switchOnAt) > 180){
+		if(current->switchOnAt > 0 && ((long)rawtime - current->switchOnAt) > 210){
+			if(current->targetDeviceState == 0)
+			{
+				triggerDevice(current->targetDeviceId);
+				logDebug("[AutomaticTrigger] Trigger device: %s", current->targetDeviceId);
+			}			
+		}
+		else if(current->targetDeviceState == 1){
 			triggerDevice(current->targetDeviceId);
-			logDebug("[AutomaticTrigger] Trigger device: %ld", current->targetDeviceId);
-			current->switchOnAt = -1;
+			logDebug("[AutomaticTrigger] Trigger device: %s", current->targetDeviceId);
 		}
 
 		current = current->next;

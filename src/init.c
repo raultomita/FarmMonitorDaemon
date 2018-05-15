@@ -69,7 +69,7 @@ int main(int argc, char **argv)
 			lastHeartBeat = (long)rawtime;
 			sendCommand("heartbeat");
 		}
-		delay(1000);
+		delay(400);
 	}
 	return 0;
 }
