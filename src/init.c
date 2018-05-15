@@ -10,7 +10,7 @@
 #include "main.h"
 #include "devices/devices.h"
 
-char *redisHost = "192.168.1.200";
+char *redisHost = "192.168.1.201";
 int redisPort = 6379;
 int state = LOW;
 int debug = 0;
