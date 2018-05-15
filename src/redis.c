@@ -195,7 +195,7 @@ void *subscriberThreadHandler(void *threadId)
         subscriberContext = NULL;
 
         logDebug("[Redis] Trying to reconnect subscriber context in 5 sec");
-        sleep(5);
+        sleep(30);
     }
 
     logInfo("[Redis] Exit external commands thread");
