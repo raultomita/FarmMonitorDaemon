@@ -1,6 +1,14 @@
 import tornado
 import tornadis
+import redis
 
+print("Enter redis manager")
+
+pool = redis.ConnectionPool(host='localhost', port=6379)
+
+def hgetall(command):
+    r = redis.Redis(connection_pool=pool)
+    return r.hgetall(command)
 
 def handleResult(result):
     if isinstance(result, tornadis.TornadisException):
@@ -37,8 +45,8 @@ def main():
 # host: redis host to connect
 # port: redis port to connect
 # autoconnect=True: put the Client object in auto(re)connect mode
-client = tornadis.PubSubClient(host="192.168.1.200", port=6379, autoconnect=True)
+#client = tornadis.PubSubClient(host="192.168.1.200", port=6379, autoconnect=True)
 
 # Start a tornado IOLoop, execute the coroutine and end the program
-loop = tornado.ioloop.IOLoop.instance()
-loop.run_sync(main)
+#loop = tornado.ioloop.IOLoop.instance()
+#loop.run_sync(main)
