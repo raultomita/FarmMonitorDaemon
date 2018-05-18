@@ -1,52 +1,45 @@
 import tornado
 import tornadis
+import asyncio
 import redis
+import dispatcher
 
 print("Enter redis manager")
 
-pool = redis.ConnectionPool(host='localhost', port=6379)
+pool = redis.ConnectionPool(host='192.168.1.201', port=6379)
 
-def hgetall(command):
-    r = redis.Redis(connection_pool=pool)
-    return r.hgetall(command)
-
-def handleResult(result):
-    if isinstance(result, tornadis.TornadisException):
-        # For specific reasons, tornadis nearly never raises any exception
-        # they are returned as result
-        print ("got exception: %s" % result)
-    else:
-        # result is already a python object (a string in this simple example)
-        print ("Result: %s" % result)
-
-
-@tornado.gen.coroutine
-def main():
-    while True:
-        if(client.is_connected()):
-            print("is connected")
-            print("Read messages")
-            result = yield client.pubsub_pop_message()
-            handleResult(result)
-                        
-        # let's (re)connect (autoconnect mode), call the ping redis command
-        # and wait the reply without blocking the tornado ioloop
-        # Note: async_call() method on Client instance does not return anything
-        # but the callback will be called later with the result.
+class RedisClient:
+    @tornado.gen.coroutine
+    def handleCommands(self):
+        while True and not dispatcher.stopper.is_set():
+            if(self.client.is_connected()):                
+                print("[Connected] Read messages")
+                result = yield self.client.pubsub_pop_message()
+                self.handleResult(result)
+                            
+            # let's (re)connect (autoconnect mode), call the ping redis command
+            # and wait the reply without blocking the tornado ioloop
+            # Note: async_call() method on Client instance does not return anything
+            # but the callback will be called later with the result.
+            else:
+                connRes = yield self.client.connect()
+                if(connRes == True):
+                    yield self.client.pubsub_subscribe("commands")
+                print("Is not connected")
+            yield tornado.gen.sleep(0.5)
+    
+    def handleResult(self, result):
+        if isinstance(result, tornadis.TornadisException):
+            # For specific reasons, tornadis nearly never raises any exception
+            # they are returned as result
+            print ("got exception: %s" % result)
         else:
-            connRes = yield client.connect()
-            if(connRes == True):
-                yield client.pubsub_subscribe("commands")
-            print("Is not connected")
-        yield tornado.gen.sleep(1)
-
-
-# Build a tornadis.Client object with some options as kwargs
-# host: redis host to connect
-# port: redis port to connect
-# autoconnect=True: put the Client object in auto(re)connect mode
-#client = tornadis.PubSubClient(host="192.168.1.200", port=6379, autoconnect=True)
-
-# Start a tornado IOLoop, execute the coroutine and end the program
-#loop = tornado.ioloop.IOLoop.instance()
-#loop.run_sync(main)
+            # result is already a python object (a string in this simple example)
+            print ("Result: %s" % result[2])
+            dispatcher.commandsQueue.put(result[2])
+    
+    def run(self):
+        asyncio.set_event_loop(asyncio.new_event_loop())
+        self.client = tornadis.PubSubClient(host="192.168.1.201", port=6379, autoconnect=True)    
+        loop = tornado.ioloop.IOLoop.instance()
+        loop.run_sync(self.handleCommands)

@@ -4,6 +4,8 @@ class Thing:
         self.location = "NoLocation"
         self.display = "NoDisplay"
 
+    def setId (self, id):
+        self.id = id
     def setName(self, name):
         self.name = name
     

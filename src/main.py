@@ -1,7 +1,12 @@
-import queue
 import redisManager
-import groupToggleButton
- 
-commandsQueue = queue.Queue()
-group = groupToggleButton.GroupToggleButton()
-group.handleCommand('switch15:1')
+import dispatcher
+import threading
+import time
+
+redisThread = threading.Thread(target=redisManager.RedisClient().run)
+redisThread.start()
+
+dispatcherThread = threading.Thread(target=dispatcher.startDispatching)
+dispatcherThread.start()
+
+
