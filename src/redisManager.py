@@ -3,12 +3,29 @@ import tornadis
 import asyncio
 import redis
 import dispatcher
+import socket
 
-print("Enter redis manager")
+pool = redis.ConnectionPool(host='127.0.0.1', port=6379)
+r = redis.Redis(connection_pool=pool)
 
-pool = redis.ConnectionPool(host='192.168.1.201', port=6379)
+def initializeSystem():
+    hostName = socket.gethostname()
+    print("initialize system for %s" % hostName)
+    
+    cursor, members = r.sscan(hostName)
+    
+    while True:
+        for deviceId in members:
+            device = r.hgetall(deviceId)
+            dispatcher.addDevice(deviceId, device)
+        if cursor == 0:
+            break
 
-class RedisClient:
+        cursor, members = r.sscan(hostName, cursor=cursor)
+
+#log recconnection in redis  cache with an expiration date
+
+class RedisPubSubClient:
     @tornado.gen.coroutine
     def handleCommands(self):
         while True and not dispatcher.stopper.is_set():
