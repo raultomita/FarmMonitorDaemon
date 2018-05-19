@@ -79,7 +79,7 @@ void initializeToggleButton(char *deviceId, redisReply *r)
 {
     logInfo("Init toggle button with id %s", deviceId);
 
-    if (r->elements == 8 && strcmp(r->element[2]->str, "gpio") == 0 && strcmp(r->element[4]->str, "targetDeviceId") == 0)
+    if (r->elements > 7 && strcmp(r->element[2]->str, "gpio") == 0 && strcmp(r->element[4]->str, "targetDeviceId") == 0)
     {
         addToggleButton(deviceId, strtoimax(r->element[3]->str, NULL, 10), strtoimax(r->element[7]->str, NULL, 10), r->element[5]->str);
     }

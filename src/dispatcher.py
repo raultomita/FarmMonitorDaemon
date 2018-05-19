@@ -3,6 +3,7 @@ import threading
 import redisManager
 
 import switch
+import toggleButton
 import stateManager
 
 receivedCommandsQueue = queue.Queue()
@@ -39,6 +40,11 @@ def addDevice(id, device):
         newStateManager.setId(id.decode(encoding))
 
         devices.append(newStateManager)
+    
+    elif device[b"type"] == b"toggleButton":
+        newToggleButton = toggleButton.ToggleButton()
+        newToggleButton.setId(deviceId)
+        pass
 
 def handleCommand(command):
     for device in devices:
@@ -51,7 +57,6 @@ def sendCommand(command):
     if not success:
         handleCommand(command)
     
-
 def initializeSystem():
     for device in devices:
         device.initialize()
