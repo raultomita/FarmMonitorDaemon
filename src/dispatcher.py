@@ -43,8 +43,18 @@ def addDevice(id, device):
     
     elif device[b"type"] == b"toggleButton":
         newToggleButton = toggleButton.ToggleButton()
-        newToggleButton.setId(deviceId)
+        newToggleButton.setId(id.decode(encoding))
+        newToggleButton.setGpio(int(device[b"gpio"]))
+        if b"commands4On" in device:
+            newToggleButton.setCombinedReactTo(device[b"targetDeviceId"].decode(), device[b"commands4On"].decode())
+        else:
+            newToggleButton.setReactTo(device[b"targetDeviceId"].decode())
+
+        devices.append(newToggleButton)
+    
+    elif device[b"type"] == b"led":
         pass
+
 
 def handleCommand(command):
     for device in devices:

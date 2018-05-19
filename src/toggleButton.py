@@ -1,10 +1,15 @@
 import baseThing
 import dispatcher
+from gpiozero import Button
 
 class ToggleButton(baseThing.Thing):
     def __init__(self):
         self.onCommands = []
         self.state = 0
+
+    def setGpio(self, gpio):
+        self.button = Button(gpio, bounce_time=1)
+        self.button.when_pressed = self.handleInteruption
 
     def setReactTo(self, command):        
         self.reactTo = command
@@ -18,9 +23,9 @@ class ToggleButton(baseThing.Thing):
             self.onCommands.append(onCommand + ":on")    
         
     def handleCommand(self, command):
-        if command == reactTo + ":0":
+        if command == self.reactTo + ":0":
             self.state = 0
-        elif command == reactTo + ":1":
+        elif command == self.reactTo + ":1":
             self.state = 1
 
     def handleInteruption(self):

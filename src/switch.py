@@ -1,10 +1,10 @@
 import baseThing
 import dispatcher
+import redisManager
+from gpiozero import OutputDevice
 
+switchNotification = '{ "id": "%s", "type": "switch", "display":"%s", "location":"%s", "timeStamp": "%s", "state": "%d" }'
 class Switch(baseThing.Thing):
-    def __init__(self):
-        self.state = 0
-
     def setLocation(self, location):
         self.location = location
 
@@ -12,27 +12,35 @@ class Switch(baseThing.Thing):
         self.display = display
 
     def setGpio(self, gpio):
-        self.gpio = gpio
+        self.output = OutputDevice(gpio)
 
     def handleCommand(self, command):
         if command == self.id:
-            print("toggle switch %s with gpio %d" % (self.id, self.gpio))
-            self.state = (self.state + 1) % 2
+            print("toggle switch %s" % self.id)
+            self.output.toggle()
             self.sendState() 
+            self.sendNotification()
         elif command == self.id + ":on" or command == self.location + ":on" or command == "all:on":
-            self.state = 1
+            self.output.on()
             self.sendState() 
-            print("turn on switch %s with gpio %d" % (self.id, self.gpio))
+            self.sendNotification()
+            print("turn on switch %s" % self.id)
         elif command == self.id + ":off" or command == self.location + ":off" or command == "all:off":
-            self.state = 0
+            self.output.off()
             self.sendState() 
-            print("turn off switch %s with gpio %d" % (self.id, self.gpio))
+            self.sendNotification()
+            print("turn off switch %s" % self.id)
         elif command == "all:?":            
             print("query state")
             self.sendState()
     
-    def initialize(self):                
+    def initialize(self):
         self.sendState()
     
-    def sendState(self):
-        dispatcher.sendCommand("%s:%d" % (self.id, self.state))
+    def sendState(self):        
+        dispatcher.sendCommand("%s:%d" % (self.id, int(self.output.value)))
+            
+    def sendNotification(self):       
+        notification = switchNotification % (self.id, self.display, self.location, "na", int(self.output.value))
+        redisManager.hset("devices", self.id, notification)
+        redisManager.publishNotification(notification)

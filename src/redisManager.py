@@ -74,7 +74,7 @@ def publishCommand(command):
     return publish("commands", command)
 
 def publishNotification(notification):
-    return publish("notification", notification)
+    return publish("notifications", notification)
 #log recconnection in redis cache with an expiration date
 
 class RedisPubSubClient:
@@ -95,7 +95,7 @@ class RedisPubSubClient:
                 if(connRes == True):
                     yield self.client.pubsub_subscribe("commands")
                 print("Is not connected")
-            yield tornado.gen.sleep(0.5)
+            yield tornado.gen.sleep(0.1)
     
     def handleResult(self, result):
         if isinstance(result, tornadis.TornadisException):
