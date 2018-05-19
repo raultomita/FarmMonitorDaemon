@@ -7,3 +7,6 @@ class Thing:
     
     def handleCommand(self, command):
         pass
+
+    def initialize(self):
+        pass

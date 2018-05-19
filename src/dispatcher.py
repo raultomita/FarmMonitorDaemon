@@ -1,9 +1,11 @@
 import queue
 import threading 
+import redisManager
 
 import switch
+import stateManager
 
-commandsQueue = queue.Queue()
+receivedCommandsQueue = queue.Queue()
 stopper = threading.Event()
 devices = []
 
@@ -13,13 +15,13 @@ encoding = "utf-8"
 def startDispatching():    
     while True and not stopper.is_set() :
         print("Listen for items in queue")
-        command = commandsQueue.get().decode(encoding)
+        command = receivedCommandsQueue.get().decode(encoding)
         print("Dequeue")
         print(command)
-        for device in devices:
-            device.handleCommand(command)
-        
+        handleCommand(command)
+
 def addDevice(id, device):
+    print(device)
     if device[b"type"] == b"switch":
         print("found switch %s" % id)
         
@@ -30,4 +32,26 @@ def addDevice(id, device):
         newSwitch.setGpio(int(device[b"gpio"]))
 
         devices.append(newSwitch)
-    print(device)
+
+    elif device[b"type"] == b"stateManager":
+        print ("found state manager%s" % id)
+        newStateManager = stateManager.StateManager()
+        newStateManager.setId(id.decode(encoding))
+
+        devices.append(newStateManager)
+
+def handleCommand(command):
+    for device in devices:
+        device.handleCommand(command)
+        
+def sendCommand(command):
+    #throttle commands
+    print("send command: %s" % command)
+    success = redisManager.publishCommand(command)
+    if not success:
+        handleCommand(command)
+    
+
+def initializeSystem():
+    for device in devices:
+        device.initialize()
