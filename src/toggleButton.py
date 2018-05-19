@@ -8,8 +8,8 @@ class ToggleButton(baseThing.Thing):
         self.state = 0
 
     def setGpio(self, gpio):
-        self.button = Button(gpio, bounce_time=1)
-        self.button.when_pressed = self.handleInteruption
+        self.button = Button(gpio)        
+        self.button. when_released = lambda: self.handleInterruption()
 
     def setReactTo(self, command):        
         self.reactTo = command
@@ -28,7 +28,8 @@ class ToggleButton(baseThing.Thing):
         elif command == self.reactTo + ":1":
             self.state = 1
 
-    def handleInteruption(self):
+    def handleInterruption(self):
+        print("handle interruption")
         if self.state == 0:
             for onCommand in self.onCommands:
                 dispatcher.sendCommand(onCommand)
