@@ -1,33 +1,43 @@
 import baseThing
-import redisManager
+import redisConn
 import dispatcher
+import logging
 import re
+
+logger = logging.getLogger(__name__)
 
 class StateManager(baseThing.Thing):
     def __init__(self):
+        self.matcher = re.compile('(switch[0-9]*):([01])')
         self.switches = {}
-        self.initialized = False
+        logger.debug("read all switches")
+        switchLocations = redisConn.readAllSwitchLocations()
+        logger.debug(switchLocations)
+        for switch in switchLocations:
+            self.switches[switch['id']] = {
+                'location': switch['location'],
+                'state': "0"
+            }        
 
-    def handleCommand(self, command): 
-               
-        result = re.search('(switch[0-9]*):([01])', command)
-        if result != None and self.initialized:
-            
+    def handleCommand(self, command):                
+        result = self.matcher.fullmatch(command)
+        if result != None :
+            logger.debug("match %s" % command)            
             deviceId = result.group(1)
             state = result.group(2)
             
-            print("set state %s for %s" % (state, deviceId))
-            redisManager.hset("states", deviceId, state)
-            switchLocation = self.switches[deviceId]
+            logger.debug("set state %s for %s" % (state, deviceId))
+            self.switches[deviceId]['state'] = state
+            switchLocation = self.switches[deviceId]['location']
             locationState = 0
             allState = 0
 
-            states = redisManager.hgetall("states")
+            
            
-            for key, location in self.switches.items():
-                if key.encode() in states and states[key.encode()] == b'1':
+            for key, switch in self.switches.items():
+                if switch['state'] == '1':
                     allState = 1
-                    if location == switchLocation :
+                    if switchLocation == switch['location'] :
                         locationState = 1
 
             dispatcher.sendCommand("%s:%d" %(switchLocation, locationState))
@@ -35,11 +45,4 @@ class StateManager(baseThing.Thing):
 
 
     def initialize(self):
-        switchLocations = redisManager.readAllSwitchLocations()
-        for key, value in switchLocations.items():
-            self.switches[key] = value        
-
-        print("states: ")
-        print(self.switches)
-        self.initialized = True
-        dispatcher.sendCommand("all:?")
+        redisConn.enqueueCommand("all:?")

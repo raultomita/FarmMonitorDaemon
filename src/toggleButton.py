@@ -1,6 +1,9 @@
 import baseThing
 import dispatcher
+import logging
 from gpiozero import Button
+
+logger = logging.getLogger(__name__)
 
 class ToggleButton(baseThing.Thing):
     def __init__(self):
@@ -13,8 +16,8 @@ class ToggleButton(baseThing.Thing):
 
     def setReactTo(self, command):        
         self.reactTo = command
-        self.onCommands.append(command)
-        self.offCommand = command
+        self.onCommands.append(command + ":on")
+        self.offCommand = command + ":off"
     
     def setCombinedReactTo(self, command, onCommands):
         self.reactTo = command
@@ -29,7 +32,7 @@ class ToggleButton(baseThing.Thing):
             self.state = 1
 
     def handleInterruption(self):
-        print("handle interruption")
+        logger.debug("handle interruption")
         if self.state == 0:
             for onCommand in self.onCommands:
                 dispatcher.sendCommand(onCommand)

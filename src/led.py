@@ -1,6 +1,9 @@
 import baseThing
 import dispatcher
+import logging
 from gpiozero import LED
+
+logger = logging.getLogger(__name__)
 
 class Led(baseThing.Thing):
     def __init__(self):
@@ -17,18 +20,13 @@ class Led(baseThing.Thing):
 
     def handleCommand(self, command):
         if self.command + ":1" == command:
-            print("switch led off")
+            logger.debug("switch led off")
             self.led.off()
             if self.ledOff != None:
                 self.ledOff.on()
 
         elif self.command + ":0" == command:
-            print("switch led on")
+            logger.debug("switch led on")
             self.led.on()
             if self.ledOff != None:
                 self.ledOff.off()
-        else:
-            print("led for command %s not found" % command)
-
-    def initialize(self):
-        dispatcher.sendCommand(self.command + ":?")

@@ -1,86 +1,95 @@
 import queue
 import threading 
 import redisManager
+import redisConn
+import logging
 
 import switch
 import toggleButton
 import led
 import stateManager
 
+logger = logging.getLogger(__name__)
+
 receivedCommandsQueue = queue.Queue()
-stopper = threading.Event()
-devices = []
 
-#all deconding and encoding should be in this file
-encoding = "utf-8"
+def enqueueCommand(command):
+    receivedCommandsQueue.put(command)    
+    logger.info("Command received %s" % command)
 
-def startDispatching():  
-    redisManager.readDevices()
-    initializeSystem()
-
-    while True and not stopper.is_set() :
-        print("Listen for items in queue")
-        command = receivedCommandsQueue.get().decode(encoding)
-        print("Dequeue")
-        print(command)
-        handleCommand(command)
-
-def addDevice(id, device):
-    print(device)
-    if device[b"type"] == b"switch":
-        print("found switch %s" % id)
-        
-        newSwitch = switch.Switch()
-        newSwitch.setId(id.decode(encoding))
-        newSwitch.setLocation(device[b"location"].decode(encoding))
-        newSwitch.setDisplay(device[b"display"].decode(encoding))
-        newSwitch.setGpio(int(device[b"gpio"]))
-
-        devices.append(newSwitch)
-
-    elif device[b"type"] == b"stateManager":
-        print ("found state manager %s" % id)
-        newStateManager = stateManager.StateManager()
-        newStateManager.setId(id.decode(encoding))
-
-        devices.append(newStateManager)
-    
-    elif device[b"type"] == b"toggleButton":
-        print("found toggleButton %s" % id)
-        newToggleButton = toggleButton.ToggleButton()
-        newToggleButton.setId(id.decode(encoding))
-        newToggleButton.setGpio(int(device[b"gpio"]))
-        if b"commands4On" in device:
-            newToggleButton.setCombinedReactTo(device[b"targetDeviceId"].decode(), device[b"commands4On"].decode())
-        else:
-            newToggleButton.setReactTo(device[b"targetDeviceId"].decode())
-
-        devices.append(newToggleButton)    
-    
-    elif device[b"type"] == b"led":
-        print("found led %s" % id)
-        newLed = led.Led()
-        newLed.setId(id.decode(encoding))
-        newLed.setReactTo(device[b"listenTo"].decode(encoding))
-        newLed.setGpio(int(device[b"gpio"]))
-
-        if b"gpioOff" in device:
-            newLed.setGpioOff(int(device[b"gpioOff"]))
-        
-        devices.append(newLed)
-        newLed.initialize()
-
-def handleCommand(command):
-    for device in devices:
-        device.handleCommand(command)
-        
 def sendCommand(command):
     #throttle commands
-    print("send command: %s" % command)
-    success = redisManager.publishCommand(command)
-    if not success:
-        handleCommand(command)
+    logger.debug("send command: %s" % command)
+    enqueueCommand(command)
+    redisConn.enqueueCommand(command)
+
+class DispatcherThread(threading.Thread):
+    def __init__(self):
+        super(DispatcherThread, self).__init__()
+        self.daemon = True
+        self.devices = []
+
+    def run(self):
+        self.addDevices()
+        self.initializeSystem()
+
+        logger.debug("Before handling commands there are %d" % receivedCommandsQueue.qsize())
+
+        while True:
+            logger.debug("Listen for items in queue")
+            command = receivedCommandsQueue.get()
+            logger.debug("command %s dequeued" % command)
+        
+            self.handleCommand(command)
+
+    def handleCommand(self, command):
+        for device in self.devices:
+            device.handleCommand(command)
+
+    def addDevices(self):
+        devices = redisConn.readDevices()            
+        for device in devices:
+            self.addDevice(device)
+        
+        logger.info("Added %d devices from %d received", len(self.devices), len(devices))
+
+    def addDevice(self, rawDevice):
+        logger.debug(rawDevice)
+        newDevice = None
+        
+        if rawDevice[b"type"] == b"switch":
+            newDevice = switch.Switch()            
+            newDevice.setLocation(rawDevice[b"location"].decode())
+            newDevice.setDisplay(rawDevice[b"display"].decode())
+            newDevice.setGpio(int(rawDevice[b"gpio"]))
+
+        elif rawDevice[b"type"] == b"toggleButton":           
+            newDevice = toggleButton.ToggleButton()            
+            newDevice.setGpio(int(rawDevice[b"gpio"]))
+            if b"commands4On" in rawDevice:
+                newDevice.setCombinedReactTo(rawDevice[b"targetDeviceId"].decode(), rawDevice[b"commands4On"].decode())
+            else:
+                newDevice.setReactTo(rawDevice[b"targetDeviceId"].decode())
+
+        elif rawDevice[b"type"] == b"led":            
+            newDevice = led.Led()
+            newDevice.setReactTo(rawDevice[b"listenTo"].decode())
+            newDevice.setGpio(int(rawDevice[b"gpio"]))
+
+            if b"gpioOff" in rawDevice:
+                newDevice.setGpioOff(int(rawDevice[b"gpioOff"]))
+            
+        elif rawDevice[b"type"] == b"stateManager":            
+            newDevice = stateManager.StateManager()
+
+        if newDevice != None:
+            logger.info("Adding %s %s", rawDevice[b'type'], rawDevice[b'id'])
+            newDevice.setId(rawDevice[b'id'].decode())
+            self.devices.append(newDevice)
+
+
+    def initializeSystem(self):
+        logger.debug("Start initialization")
+        for device in self.devices:
+            device.initialize()   
     
-def initializeSystem():
-    for device in devices:
-        device.initialize()
