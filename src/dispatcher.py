@@ -1,6 +1,5 @@
 import queue
 import threading 
-import redisManager
 import redisConn
 import logging
 
