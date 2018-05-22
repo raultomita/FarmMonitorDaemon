@@ -31,8 +31,8 @@ class ToggleButton(baseThing.Thing):
         elif command == self.reactTo + ":1":
             self.state = 1
 
-    def initialize(sef):
-        dispatcher.sendComand(self.reactTo + ":?")
+    def initialize(self):
+        dispatcher.sendCommand(self.reactTo + ":?")
 
     def handleInterruption(self):
         logger.debug("handle interruption")
