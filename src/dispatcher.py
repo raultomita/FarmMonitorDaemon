@@ -7,6 +7,7 @@ import switch
 import toggleButton
 import led
 import stateManager
+import automaticTrigger
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +81,11 @@ class DispatcherThread(threading.Thread):
             
         elif rawDevice[b"type"] == b"stateManager":            
             newDevice = stateManager.StateManager()
+
+        elif rawDevice[b"type"] == b"automaticTrigger":
+            newDevice = automaticTrigger.AutomaticTrigger()
+            newDevice.setTargetDeviceId(rawDevice[b"targetDeviceId"].decode())  
+            newDevice.setListenOn(rawDevice[b"listenOnDeviceId"].decode())  
 
         if newDevice != None:
             logger.info("Adding %s %s", rawDevice[b'type'], rawDevice[b'id'])
