@@ -8,6 +8,7 @@ import toggleButton
 import led
 import stateManager
 import automaticTrigger
+import distanceSensor
 from heartbeat import *
 
 logger = logging.getLogger(__name__)
@@ -86,6 +87,13 @@ class DispatcherThread(threading.Thread):
             newDevice = automaticTrigger.AutomaticTrigger()
             newDevice.setTargetDeviceId(rawDevice[b"targetDeviceId"].decode())  
             newDevice.setListenOn(rawDevice[b"listenOnDeviceId"].decode())  
+
+        elif rawDevice[b"type"] == b"distanceSensor":
+            newDevice = distanceSensor.DistanceSensor()
+            newDevice.setGpio(int(rawDevice[b"gpio"]))
+            newDevice.setReactTo(rawDevice[b"targetDeviceId"].decode())
+            if rawDevice[b"invertState"] == b"1":
+                newDevice.makeToggle()
 
         if newDevice != None:
             logger.info("Adding %s %s", rawDevice[b'type'], rawDevice[b'id'])
