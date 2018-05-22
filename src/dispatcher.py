@@ -8,6 +8,7 @@ import toggleButton
 import led
 import stateManager
 import automaticTrigger
+from heartbeat import Hearbeat
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +52,8 @@ class DispatcherThread(threading.Thread):
         for device in devices:
             self.addDevice(device)
         
+        self.addSystemDevices()
+
         logger.info("Added %d devices from %d received", len(self.devices), len(devices))
 
     def addDevice(self, rawDevice):
@@ -78,10 +81,7 @@ class DispatcherThread(threading.Thread):
 
             if b"gpioOff" in rawDevice:
                 newDevice.setGpioOff(int(rawDevice[b"gpioOff"]))
-            
-        elif rawDevice[b"type"] == b"stateManager":            
-            newDevice = stateManager.StateManager()
-
+      
         elif rawDevice[b"type"] == b"automaticTrigger":
             newDevice = automaticTrigger.AutomaticTrigger()
             newDevice.setTargetDeviceId(rawDevice[b"targetDeviceId"].decode())  
@@ -92,6 +92,16 @@ class DispatcherThread(threading.Thread):
             newDevice.setId(rawDevice[b'id'].decode())
             self.devices.append(newDevice)
 
+    def addSystemDevices(self):
+        heartbeat = Hearbeat()
+        heartbeat.setId("heartbeat")
+        self.devices.append(heartbeat)
+
+        if redisConn.hostName == "watcher":
+            stateMan = stateManager.StateManager()
+            stateMan.setId("stateManager")            
+            self.devices.append(stateMan)
+            logger.debug("Due to being a master node, stateManager and and heartbeetMonitor are added.")
 
     def initializeSystem(self):
         logger.debug("Start initialization")

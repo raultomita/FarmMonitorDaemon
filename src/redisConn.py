@@ -8,14 +8,14 @@ import socket
 import dispatcher
 
 logger = logging.getLogger(__name__)
-
+hostName = socket.gethostname()
 #Local initialization
 
 localPool = ConnectionPool(host='127.0.0.1', port=6379)
 localRedis = StrictRedis(connection_pool=localPool, decode_responses=True)
 
 def readDevices():    
-    hostName = socket.gethostname()
+    
     logger.info("initialize system for %s" % hostName)
     devices = []
     cursor, members = localRedis.sscan(hostName)
