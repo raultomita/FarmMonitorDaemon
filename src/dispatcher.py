@@ -8,7 +8,7 @@ import toggleButton
 import led
 import stateManager
 import automaticTrigger
-from heartbeat import Hearbeat
+from heartbeat import *
 
 logger = logging.getLogger(__name__)
 
@@ -101,6 +101,11 @@ class DispatcherThread(threading.Thread):
             stateMan = stateManager.StateManager()
             stateMan.setId("stateManager")            
             self.devices.append(stateMan)
+
+            heartbeatMon = HeartbeatMonitor()
+            heartbeatMon.setId("heartbeatMonitor")
+            self.devices.append(heartbeatMon)
+
             logger.debug("Due to being a master node, stateManager and and heartbeetMonitor are added.")
 
     def initializeSystem(self):
