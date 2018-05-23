@@ -3,13 +3,13 @@ import threading
 import redisConn
 import logging
 
-import switch
-import toggleButton
-import led
-import stateManager
-import automaticTrigger
-import distanceSensor
-from heartbeat import *
+from devices.switch import Switch
+from devices.toggleButton import ToggleButton
+from devices.led import Led
+from devices.stateManager import StateManager
+from devices.automaticTrigger import AutomaticTrigger
+from devices.distanceSensor import DistanceSensor
+from devices.heartbeat import *
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class DispatcherThread(threading.Thread):
         self.addDevices()
         self.initializeSystem()
 
-        logger.debug("Before handling commands there are %d" % receivedCommandsQueue.qsize())
+        logger.debug("Before handling commands they are %d" % receivedCommandsQueue.qsize())
 
         while True:
             logger.debug("Listen for items in queue")
@@ -62,13 +62,13 @@ class DispatcherThread(threading.Thread):
         newDevice = None
         
         if rawDevice[b"type"] == b"switch":
-            newDevice = switch.Switch()            
+            newDevice = Switch()            
             newDevice.setLocation(rawDevice[b"location"].decode())
             newDevice.setDisplay(rawDevice[b"display"].decode())
             newDevice.setGpio(int(rawDevice[b"gpio"]))
 
         elif rawDevice[b"type"] == b"toggleButton":           
-            newDevice = toggleButton.ToggleButton()            
+            newDevice = ToggleButton()            
             newDevice.setGpio(int(rawDevice[b"gpio"]))
             if b"commands4On" in rawDevice:
                 newDevice.setCombinedReactTo(rawDevice[b"targetDeviceId"].decode(), rawDevice[b"commands4On"].decode())
@@ -76,7 +76,7 @@ class DispatcherThread(threading.Thread):
                 newDevice.setReactTo(rawDevice[b"targetDeviceId"].decode())
 
         elif rawDevice[b"type"] == b"led":            
-            newDevice = led.Led()
+            newDevice = Led()
             newDevice.setReactTo(rawDevice[b"listenTo"].decode())
             newDevice.setGpio(int(rawDevice[b"gpio"]))
 
@@ -84,12 +84,12 @@ class DispatcherThread(threading.Thread):
                 newDevice.setGpioOff(int(rawDevice[b"gpioOff"]))
       
         elif rawDevice[b"type"] == b"automaticTrigger":
-            newDevice = automaticTrigger.AutomaticTrigger()
+            newDevice = AutomaticTrigger()
             newDevice.setTargetDeviceId(rawDevice[b"targetDeviceId"].decode())  
             newDevice.setListenOn(rawDevice[b"listenOnDeviceId"].decode())  
 
         elif rawDevice[b"type"] == b"distanceSensor":
-            newDevice = distanceSensor.DistanceSensor()
+            newDevice = DistanceSensor()
             newDevice.setGpio(int(rawDevice[b"gpio"]))
             newDevice.setReactTo(rawDevice[b"targetDeviceId"].decode())
             if rawDevice[b"invertState"] == b"1":
@@ -106,7 +106,7 @@ class DispatcherThread(threading.Thread):
         self.devices.append(heartbeat)
 
         if redisConn.hostName == "watcher":
-            stateMan = stateManager.StateManager()
+            stateMan = StateManager()
             stateMan.setId("stateManager")            
             self.devices.append(stateMan)
 
