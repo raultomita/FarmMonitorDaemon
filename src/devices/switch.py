@@ -38,6 +38,6 @@ class Switch(baseThing.Thing):
     
     def sendState(self):        
         dispatcher.sendCommand("%s:%d" % (self.id, int(self.output.value)))
-        notification = switchNotification % (self.id, self.display, self.location, datetime.now().strftime("%d.%m.%y %H:%M:%S"), int(self.output.value))
+        notification = switchNotification % (self.id, self.display, self.location, datetime.now().isoformat(), int(self.output.value))
         redisConn.enqueueGeneral('HSET', 'devices', self.id, notification)
         redisConn.enqueueNotification(notification)        
