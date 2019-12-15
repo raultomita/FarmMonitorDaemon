@@ -1,5 +1,6 @@
 import redisConn
 import dispatcher
+import remote
 import threading
 import time
 import logging
@@ -21,6 +22,9 @@ redisThread.start()
 
 dispatcherThread = dispatcher.DispatcherThread()
 dispatcherThread.start()
+
+remoteControlThread = remote.RemoteControlThread()
+remoteControlThread.start()
 
 while True:
     logger.debug(time.clock())

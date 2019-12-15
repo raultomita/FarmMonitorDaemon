@@ -5,7 +5,7 @@ from evdev import *
 
 logger = logging.getLogger(__name__)
 dev = InputDevice('/dev/input/event1')
-
+print(dev)
 logger.debug(dev)
 
 class RemoteControlThread(threading.Thread):
@@ -36,6 +36,7 @@ class RemoteControlThread(threading.Thread):
                        dispatcher.sendCommand("switch7:off")
                        dispatcher.sendCommand("switch1:off")
                        dispatcher.sendCommand("switch11:off")
+                       dispatcher.sendCommand("switch13:off")
                        dispatcher.sendCommand("switch22:off")
                        dispatcher.sendCommand("switch20:off")
                        dispatcher.sendCommand("switch21:off")
@@ -46,6 +47,7 @@ class RemoteControlThread(threading.Thread):
                        dispatcher.sendCommand("switch7:off")
                        dispatcher.sendCommand("switch1:off")
                        dispatcher.sendCommand("switch11:off")
+                       dispatcher.sendCommand("switch13:off")
                        dispatcher.sendCommand("switch22:off")
                        dispatcher.sendCommand("switch21:off")
                        dispatcher.sendCommand("switch20:off")
