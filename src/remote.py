@@ -4,7 +4,7 @@ import threading
 from evdev import *
 
 logger = logging.getLogger(__name__)
-dev = InputDevice('/dev/input/event5')
+dev = InputDevice('/dev/input/event1')
 print(dev)
 logger.debug(dev)
 
