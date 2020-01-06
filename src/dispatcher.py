@@ -70,10 +70,14 @@ class DispatcherThread(threading.Thread):
         elif rawDevice[b"type"] == b"toggleButton":           
             newDevice = ToggleButton()            
             newDevice.setGpio(int(rawDevice[b"gpio"]))
+            
             if b"commands4On" in rawDevice:
                 newDevice.setCombinedReactTo(rawDevice[b"targetDeviceId"].decode(), rawDevice[b"commands4On"].decode())
             else:
                 newDevice.setReactTo(rawDevice[b"targetDeviceId"].decode())
+            
+            if b"logPressedCommand" in rawDevice:
+                newDevice.setReactToLongPressed(rawDevice[b"logPressedCommand"].decode())
 
         elif rawDevice[b"type"] == b"led":            
             newDevice = Led()

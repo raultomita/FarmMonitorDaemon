@@ -1,6 +1,7 @@
 import baseThing
 import dispatcher
 import logging
+import datetime
 from gpiozero import Button
 
 logger = logging.getLogger(__name__)
@@ -9,10 +10,13 @@ class ToggleButton(baseThing.Thing):
     def __init__(self):
         self.onCommands = []
         self.state = 0
+        self.reactToLongPressed = None
+        self.startedAt = None
 
     def setGpio(self, gpio):
         self.button = Button(gpio)        
-        self.button. when_released = lambda: self.handleInterruption()
+        self.button.when_released = lambda: self.handleButtonReleased()
+        self.button.when_pressed = 
 
     def setReactTo(self, command):        
         self.reactTo = command
@@ -24,7 +28,10 @@ class ToggleButton(baseThing.Thing):
         self.offCommand = command + ":off"
         for onCommand in onCommands.split(","):
             self.onCommands.append(onCommand + ":on")    
-        
+
+    def setReactToLongPressed(self, command):
+         self.reactToLongPressed = command
+
     def handleCommand(self, command):
         if command == self.reactTo + ":0":
             self.state = 0
@@ -34,10 +41,18 @@ class ToggleButton(baseThing.Thing):
     def initialize(self):
         dispatcher.sendCommand(self.reactTo + ":?")
 
-    def handleInterruption(self):
-        logger.debug("handle interruption")
-        if self.state == 0:
-            for onCommand in self.onCommands:
-                dispatcher.sendCommand(onCommand)
+    def handleButtonPressed(self):
+        logger.debug("Handle button pressed")
+        self.startedAt = datetime.datetime.now()
+
+    def handleButtonReleased(self):
+        if(self.reactToLongPressed != None and (datetime.datetime.now() - self.startedAt).total_seconds())
+            dispatcher.sendCommand(self.reactToLongPressed)
+            logger.debug("Handle long pressed")
         else:
-            dispatcher.sendCommand(self.offCommand)
+            logger.debug("Handle short pressed")
+            if self.state == 0:
+                for onCommand in self.onCommands:
+                    dispatcher.sendCommand(onCommand)
+            else:
+                dispatcher.sendCommand(self.offCommand)
