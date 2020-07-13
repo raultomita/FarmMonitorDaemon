@@ -1,47 +1,55 @@
-from redis import ConnectionPool, StrictRedis, ConnectionError
+from redis import ConnectionPool, Redis, ConnectionError
 import time
 import threading
 import queue
 import logging
 import socket
+import json
 
 import dispatcher
 
 logger = logging.getLogger(__name__)
 hostName = socket.gethostname()
+
 needsInitialization = False
-#Local initialization
 
-localPool = ConnectionPool(host='127.0.0.1', port=6379)
-localRedis = StrictRedis(connection_pool=localPool, decode_responses=True)
-
-def readDevices():    
+def initializeSystem(redis):    
     
-    logger.info("initialize system for %s" % hostName)
+    logger.info("Initialize system for %s" % hostName)
     devices = []
-    cursor, members = localRedis.sscan(hostName)
-        
+    cursor, members = redis.sscan(hostName)
+    devicesJson = ''
+
     while True:
         for deviceId in members:
-            device = localRedis.hgetall(deviceId)
-            device[b'id'] = deviceId
+            logger.debug("Querying for device %s" % deviceId)
+            rawDevice = redis.hgetall(deviceId)
+            device = { 'id': deviceId.decode()}
+            for prop in rawDevice:
+                device[prop.decode()] = rawDevice[prop].decode()
+
             devices.append(device)
 
         if cursor == 0:
             logger.debug("Received all devices")
             break
 
-        cursor, members = localRedis.sscan(hostName, cursor=cursor)    
+        cursor, members = redis.sscan(hostName, cursor=cursor)    
     
-    return devices
+    devicesJson = json.dumps(devices, sort_keys=True, indent=4)
+    logger.debug(devicesJson)
+    configFile = open("devices.json","w")
+    configFile.write(devicesJson)
+    configFile.close()
+    logger.info("System initialized and JSON file created")
 
-def readAllSwitchLocations():
+def readAllSwitchLocations(redis):
     switches = []  
     cursor, members = localRedis.scan(match='switch*')
 
     while True:
         for deviceId in members:
-            device = localRedis.hmget(deviceId, "location")
+            device = redis.hmget(deviceId, "location")
             switches.append({
                 'id': deviceId.decode(),
                 'location':device[0].decode()
@@ -50,7 +58,7 @@ def readAllSwitchLocations():
         if cursor == 0:
             break
 
-        cursor, members = localRedis.scan(match='switch*', cursor=cursor)
+        cursor, members = redis.scan(match='switch*', cursor=cursor)
 
     return switches
 
@@ -71,7 +79,7 @@ class RedisManagerThread(threading.Thread):
     def __init__(self):
         super(RedisManagerThread, self).__init__()
         self.pool = ConnectionPool(host='192.168.1.201', port=6379)
-        self.redis = StrictRedis(connection_pool=self.pool, decode_responses=True)  
+        self.redis = Redis(connection_pool=self.pool, decode_responses=True)  
         self.pubSub = self.redis.pubsub()
         self.subcriptionThread = None
         self.daemon = True
@@ -85,9 +93,11 @@ class RedisManagerThread(threading.Thread):
             commands.get()
 
     def run(self):
-        if needsInitialization == True
-            logger.info("reading configuration from Redis")
-        
+        if needsInitialization == True:
+            initializeSystem(self.redis)
+
+        dispatcher.enqueueCommand("refreshDevices")
+
         while True:
             try:                 
                 if self.subcriptionThread is None or not self.subcriptionThread.is_alive():

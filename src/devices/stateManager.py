@@ -1,5 +1,5 @@
 import baseThing
-import redisConn
+import dataManager
 import dispatcher
 import logging
 import re
@@ -11,7 +11,7 @@ class StateManager(baseThing.Thing):
         self.matcher = re.compile('(switch[0-9]*):([01])')
         self.switches = {}
         logger.debug("read all switches")
-        switchLocations = redisConn.readAllSwitchLocations()
+        switchLocations = dataManager.readAllSwitchLocations()
         logger.debug(switchLocations)
         for switch in switchLocations:
             self.switches[switch['id']] = {
@@ -45,4 +45,4 @@ class StateManager(baseThing.Thing):
 
 
     def initialize(self):
-        redisConn.enqueueCommand("all:?")
+        dataManager.enqueueCommand("all:?")

@@ -16,7 +16,7 @@ class ToggleButton(baseThing.Thing):
     def setGpio(self, gpio):
         self.button = Button(gpio)        
         self.button.when_released = lambda: self.handleButtonReleased()
-        self.button.when_pressed = 
+        self.button.when_pressed = lambda: self.handleButtonPressed()
 
     def setReactTo(self, command):        
         self.reactTo = command
@@ -46,7 +46,7 @@ class ToggleButton(baseThing.Thing):
         self.startedAt = datetime.datetime.now()
 
     def handleButtonReleased(self):
-        if(self.reactToLongPressed != None and (datetime.datetime.now() - self.startedAt).total_seconds())
+        if self.reactToLongPressed != None and (datetime.datetime.now() - self.startedAt).total_seconds():
             dispatcher.sendCommand(self.reactToLongPressed)
             logger.debug("Handle long pressed")
         else:

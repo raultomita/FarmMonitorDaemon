@@ -1,7 +1,9 @@
 import queue
 import threading 
-import redisConn
+import dataManager
 import logging
+import json
+from os import path
 
 from devices.switch import Switch
 from devices.toggleButton import ToggleButton
@@ -23,7 +25,7 @@ def sendCommand(command):
     #throttle commands
     logger.debug("send command: %s" % command)
     enqueueCommand(command)
-    redisConn.enqueueCommand(command)
+    dataManager.enqueueCommand(command)
 
 class DispatcherThread(threading.Thread):
     def __init__(self):
@@ -32,10 +34,7 @@ class DispatcherThread(threading.Thread):
         self.devices = []
 
     def run(self):
-        self.addDevices()
-        self.initializeSystem()
-
-        logger.debug("Before handling commands they are %d" % receivedCommandsQueue.qsize())
+        logger.debug("Before handling commands, pending ones are %d" % receivedCommandsQueue.qsize())
 
         while True:
             logger.debug("Listen for items in queue")
@@ -45,63 +44,70 @@ class DispatcherThread(threading.Thread):
             self.handleCommand(command)
 
     def handleCommand(self, command):
+        if command == "refreshDevices":
+            self.addDevices()
+            self.initializeSystem()
+
         for device in self.devices:
             device.handleCommand(command)
 
     def addDevices(self):
-        devices = redisConn.readDevices()            
-        for device in devices:
-            self.addDevice(device)
-        
-        self.addSystemDevices()
-
-        logger.info("Added %d devices from %d received", len(self.devices), len(devices))
+        if path.exists("devices.json"):
+            configFile = open("devices.json","r")        
+            devices = json.loads(configFile.read())            
+            for device in devices:
+                self.addDevice(device)
+                    
+            logger.info("Added %d devices from %d received", len(self.devices), len(devices))
+            self.addSystemDevices()
+        else:
+            logger.warning("File devices.json is not found. Restart with -init as arg to initialize it.")
 
     def addDevice(self, rawDevice):
         logger.debug(rawDevice)
         newDevice = None
         
-        if rawDevice[b"type"] == b"switch":
+        if rawDevice["type"] == "switch":
             newDevice = Switch()            
-            newDevice.setLocation(rawDevice[b"location"].decode())
-            newDevice.setDisplay(rawDevice[b"display"].decode())
-            newDevice.setGpio(int(rawDevice[b"gpio"]))
+            newDevice.setLocation(rawDevice["location"])
+            newDevice.setDisplay(rawDevice["display"])
+            newDevice.setGpio(int(rawDevice["gpio"]))
 
-        elif rawDevice[b"type"] == b"toggleButton":           
+        elif rawDevice["type"] == "toggleButton":           
             newDevice = ToggleButton()            
-            newDevice.setGpio(int(rawDevice[b"gpio"]))
+            newDevice.setGpio(int(rawDevice["gpio"]))
             
-            if b"commands4On" in rawDevice:
-                newDevice.setCombinedReactTo(rawDevice[b"targetDeviceId"].decode(), rawDevice[b"commands4On"].decode())
+            if "commands4On" in rawDevice:
+                newDevice.setCombinedReactTo(rawDevice["targetDeviceId"], rawDevice["commands4On"])
             else:
-                newDevice.setReactTo(rawDevice[b"targetDeviceId"].decode())
+                newDevice.setReactTo(rawDevice["targetDeviceId"])
             
-            if b"logPressedCommand" in rawDevice:
-                newDevice.setReactToLongPressed(rawDevice[b"logPressedCommand"].decode())
+            if "logPressedCommand" in rawDevice:
+                newDevice.setReactToLongPressed(rawDevice["logPressedCommand"])
 
-        elif rawDevice[b"type"] == b"led":            
+        elif rawDevice["type"] == "led":            
             newDevice = Led()
-            newDevice.setReactTo(rawDevice[b"listenTo"].decode())
-            newDevice.setGpio(int(rawDevice[b"gpio"]))
+            newDevice.setReactTo(rawDevice["listenTo"])
+            newDevice.setGpio(int(rawDevice["gpio"]))
 
-            if b"gpioOff" in rawDevice:
-                newDevice.setGpioOff(int(rawDevice[b"gpioOff"]))
+            if "gpioOff" in rawDevice:
+                newDevice.setGpioOff(int(rawDevice["gpioOff"]))
       
-        elif rawDevice[b"type"] == b"automaticTrigger":
+        elif rawDevice["type"] == "automaticTrigger":
             newDevice = AutomaticTrigger()
-            newDevice.setTargetDeviceId(rawDevice[b"targetDeviceId"].decode())  
-            newDevice.setListenOn(rawDevice[b"listenOnDeviceId"].decode())  
+            newDevice.setTargetDeviceId(rawDevice["targetDeviceId"])  
+            newDevice.setListenOn(rawDevice["listenOnDeviceId"])  
 
-        elif rawDevice[b"type"] == b"distanceSensor":
+        elif rawDevice["type"] == "distanceSensor":
             newDevice = DistanceSensor()
-            newDevice.setGpio(int(rawDevice[b"gpio"]))
-            newDevice.setReactTo(rawDevice[b"targetDeviceId"].decode())
-            if rawDevice[b"invertState"] == b"1":
+            newDevice.setGpio(int(rawDevice["gpio"]))
+            newDevice.setReactTo(rawDevice["targetDeviceId"])
+            if rawDevice["invertState"] == "1":
                 newDevice.makeToggle()
 
         if newDevice != None:
-            logger.info("Adding %s %s", rawDevice[b'type'], rawDevice[b'id'])
-            newDevice.setId(rawDevice[b'id'].decode())
+            logger.info("Adding %s %s", rawDevice['type'], rawDevice['id'])
+            newDevice.setId(rawDevice['id'])
             self.devices.append(newDevice)
 
     def addSystemDevices(self):
@@ -109,7 +115,7 @@ class DispatcherThread(threading.Thread):
         heartbeat.setId("heartbeat")
         self.devices.append(heartbeat)
 
-        if redisConn.hostName == "watcher":
+        if dataManager.hostName == "watcher":
             stateMan = StateManager()
             stateMan.setId("stateManager")            
             self.devices.append(stateMan)

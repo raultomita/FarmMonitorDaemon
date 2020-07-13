@@ -1,6 +1,6 @@
-import redisConn
+import dataManager
 import dispatcher
-import remote
+#import remote
 import threading
 import time
 import logging
@@ -15,23 +15,23 @@ if len(sys.argv) > 1:
         logLevel = logging.INFO
     elif sys.argv[1] == '-init':
         logLevel = logging.DEBUG
-        redisCon.needsInitialization = True
+        dataManager.needsInitialization = True
 
 logging.basicConfig(format='%(levelname)-8s:%(module)-15s: %(message)s', level=logLevel)
 logger = logging.getLogger(__name__)
 
-redisThread = redisConn.RedisManagerThread()
+redisThread = dataManager.RedisManagerThread()
 redisThread.start()
 
 dispatcherThread = dispatcher.DispatcherThread()
 dispatcherThread.start()
 
-remoteControlThread = remote.RemoteControlThread()
-remoteControlThread.start()
+#remoteControlThread = remote.RemoteControlThread()
+#remoteControlThread.start()
 
 while True:
     logger.debug(time.clock())
-    logger.debug("Active threads %d with redis queue size %d and dispatcher queue size %d" % (threading.active_count(), redisConn.commands.qsize(), dispatcher.receivedCommandsQueue.qsize()))
+    logger.debug("Active threads %d with redis queue size %d and dispatcher queue size %d" % (threading.active_count(), dataManager.commands.qsize(), dispatcher.receivedCommandsQueue.qsize()))
     time.sleep(2)
     dispatcher.enqueueCommand("timer")
 
