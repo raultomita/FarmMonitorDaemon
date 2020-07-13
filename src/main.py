@@ -13,6 +13,9 @@ if len(sys.argv) > 1:
         logLevel = logging.DEBUG
     elif sys.argv[1] == '-i':
         logLevel = logging.INFO
+    elif sys.argv[1] == '-init':
+        logLevel = logging.DEBUG
+        redisCon.needsInitialization = True
 
 logging.basicConfig(format='%(levelname)-8s:%(module)-15s: %(message)s', level=logLevel)
 logger = logging.getLogger(__name__)

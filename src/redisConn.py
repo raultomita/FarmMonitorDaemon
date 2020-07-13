@@ -9,6 +9,7 @@ import dispatcher
 
 logger = logging.getLogger(__name__)
 hostName = socket.gethostname()
+needsInitialization = False
 #Local initialization
 
 localPool = ConnectionPool(host='127.0.0.1', port=6379)
@@ -84,6 +85,9 @@ class RedisManagerThread(threading.Thread):
             commands.get()
 
     def run(self):
+        if needsInitialization == True
+            logger.info("reading configuration from Redis")
+        
         while True:
             try:                 
                 if self.subcriptionThread is None or not self.subcriptionThread.is_alive():
