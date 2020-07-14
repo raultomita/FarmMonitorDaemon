@@ -10,12 +10,17 @@ import dispatcher
 
 logger = logging.getLogger(__name__)
 hostName = socket.gethostname()
+redisIP = ""
 
 needsInitialization = False
 
 def initializeSystem(redis):    
-    
     logger.info("Initialize system for %s" % hostName)
+    retrieveDevicesForThisHost(redis)
+    retrieveAllSwitchLocations(redis)
+    logger.info("System initialized and JSON file created")
+
+def retrieveDevicesForThisHost(redis)    
     devices = []
     cursor, members = redis.sscan(hostName)
     devicesJson = ''
@@ -40,12 +45,12 @@ def initializeSystem(redis):
     logger.debug(devicesJson)
     configFile = open("devices.json","w")
     configFile.write(devicesJson)
-    configFile.close()
-    logger.info("System initialized and JSON file created")
+    configFile.close()    
 
-def readAllSwitchLocations(redis):
+def retrieveAllSwitchLocations(redis):
     switches = []  
-    cursor, members = localRedis.scan(match='switch*')
+    locationsJson = ''
+    cursor, members = redis.scan(match='switch*')
 
     while True:
         for deviceId in members:
@@ -60,7 +65,11 @@ def readAllSwitchLocations(redis):
 
         cursor, members = redis.scan(match='switch*', cursor=cursor)
 
-    return switches
+    locationsJson = json.dumps(switches, sort_keys=True, indent=4)
+    logger.debug(locationsJson)
+    configFile = open("switchLocations.json","w")
+    configFile.write(locationsJson)
+    configFile.close()  
 
 #Sending and receiving comands - Connection: 192.168.1.201
 
@@ -78,7 +87,7 @@ def enqueueGeneral(*args):
 class RedisManagerThread(threading.Thread):
     def __init__(self):
         super(RedisManagerThread, self).__init__()
-        self.pool = ConnectionPool(host='192.168.1.201', port=6379)
+        self.pool = ConnectionPool(host=redisIP, port=6379)
         self.redis = Redis(connection_pool=self.pool, decode_responses=True)  
         self.pubSub = self.redis.pubsub()
         self.subcriptionThread = None
@@ -96,7 +105,7 @@ class RedisManagerThread(threading.Thread):
         if needsInitialization == True:
             initializeSystem(self.redis)
 
-        dispatcher.enqueueCommand("refreshDevices")
+        dispatcher.enqueueCommand("refreshSystem")
 
         while True:
             try:                 
