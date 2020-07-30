@@ -41,7 +41,7 @@ dispatcherThread.start()
 while True:
     logger.debug(time.clock())
     logger.debug("Active threads %d with redis queue size %d and dispatcher queue size %d" % (threading.active_count(), dataManager.commands.qsize(), dispatcher.receivedCommandsQueue.qsize()))
-    time.sleep(2)
+    time.sleep(1)
     dispatcher.enqueueCommand("timer")
 
 
