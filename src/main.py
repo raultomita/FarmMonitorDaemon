@@ -8,6 +8,7 @@ import sys
 import re
 
 logLevel = logging.WARNING
+logger = logging.getLogger(__name__)
 
 #sys.argv hods the command line args of pyhton exe. First arg is the script name itself.
 
@@ -15,7 +16,7 @@ if len(sys.argv) >= 2 and re.fullmatch("^[0-9]{1,3}(\.[0-9]{1,3}){3}$", sys.argv
     dataManager.redisIP = sys.argv[1]
 else:
     logger.error("The IP for Redis service is not sent as the first argument of the script (or has an incorrect format)")
-    return
+    sys.exit()
 
 if len(sys.argv) > 2:
     if sys.argv[2] == '-d':
@@ -27,7 +28,6 @@ if len(sys.argv) > 2:
         dataManager.needsInitialization = True
 
 logging.basicConfig(format='%(levelname)-8s:%(module)-15s: %(message)s', level=logLevel)
-logger = logging.getLogger(__name__)
 
 redisThread = dataManager.RedisManagerThread()
 redisThread.start()

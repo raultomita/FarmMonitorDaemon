@@ -20,7 +20,7 @@ def initializeSystem(redis):
     retrieveAllSwitchLocations(redis)
     logger.info("System initialized and JSON file created")
 
-def retrieveDevicesForThisHost(redis)    
+def retrieveDevicesForThisHost(redis):    
     devices = []
     cursor, members = redis.sscan(hostName)
     devicesJson = ''

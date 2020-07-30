@@ -11,6 +11,7 @@ from devices.led import Led
 from devices.stateManager import StateManager
 from devices.automaticTrigger import AutomaticTrigger
 from devices.distanceSensor import DistanceSensor
+from devices.curtainController import CurtainController
 from devices.heartbeat import *
 
 logger = logging.getLogger(__name__)
@@ -115,6 +116,9 @@ class DispatcherThread(threading.Thread):
         heartbeat.setId("heartbeat")
         self.devices.append(heartbeat)
 
+        curtainController = CurtainController()
+        curtainController.setId("cc1")
+        self.devices.append(curtainController)
         if dataManager.hostName == "watcher":
             stateMan = StateManager()
             stateMan.setId("stateManager")            
