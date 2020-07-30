@@ -10,16 +10,9 @@ class StateManager(baseThing.Thing):
     def __init__(self):
         self.matcher = re.compile('(switch[0-9]*):([01])')
         self.switches = {}
-        logger.debug("read all switches")
-        switchLocations = dataManager.readAllSwitchLocations()
-        logger.debug(switchLocations)
-        for switch in switchLocations:
-            self.switches[switch['id']] = {
-                'location': switch['location'],
-                'state': "0"
-            }        
+           
 
-    def handleCommand(self, command):                
+    def handleCommand(self, command):   
         result = self.matcher.fullmatch(command)
         if result != None :
             logger.debug("match %s" % command)            
@@ -44,5 +37,20 @@ class StateManager(baseThing.Thing):
             dispatcher.sendCommand('all:%d' % allState)
 
 
+    
     def initialize(self):
+        if path.exists("switchLocations.json"):
+            configFile = open("switchLocations.json","r")        
+            locations = json.loads(configFile.read())            
+           
+            logger.debug("read all switches")            
+            logger.debug(locations)
+            for switch in locations:
+                self.switches[switch['id']] = {
+                    'location': switch['location'],
+                    'state': "0"
+                }
+        else:
+            logger.warning("File switchLocations.json is not found. Restart with -init as arg to initialize it.")
+
         dataManager.enqueueCommand("all:?")

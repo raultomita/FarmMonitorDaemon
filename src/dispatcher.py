@@ -44,10 +44,10 @@ class DispatcherThread(threading.Thread):
             self.handleCommand(command)
 
     def handleCommand(self, command):
-        if command == "refreshDevices":
+        if command == "refreshSystem":
             self.addDevices()
             self.initializeSystem()
-
+     
         for device in self.devices:
             device.handleCommand(command)
 

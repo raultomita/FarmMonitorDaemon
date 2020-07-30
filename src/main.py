@@ -5,15 +5,24 @@ import threading
 import time
 import logging
 import sys
+import re
 
 logLevel = logging.WARNING
 
-if len(sys.argv) > 1:
-    if sys.argv[1] == '-d':
+#sys.argv hods the command line args of pyhton exe. First arg is the script name itself.
+
+if len(sys.argv) >= 2 and re.fullmatch("^[0-9]{1,3}(\.[0-9]{1,3}){3}$", sys.argv[1]) != None:
+    dataManager.redisIP = sys.argv[1]
+else:
+    logger.error("The IP for Redis service is not sent as the first argument of the script (or has an incorrect format)")
+    return
+
+if len(sys.argv) > 2:
+    if sys.argv[2] == '-d':
         logLevel = logging.DEBUG
-    elif sys.argv[1] == '-i':
+    elif sys.argv[2] == '-i':
         logLevel = logging.INFO
-    elif sys.argv[1] == '-init':
+    elif sys.argv[2] == '-init':
         logLevel = logging.DEBUG
         dataManager.needsInitialization = True
 
