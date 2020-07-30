@@ -1,10 +1,11 @@
 [Unit]
 Description=Farm Monitor Service
-After=multi-user.target redis.service
+After=multi-user.target
 
 [Service]
 Type=idle
-ExecStart=/home/pi/Projects/FarmMonitorDaemon/farmMonitor
+WorkingDirectory=/home/volumio/FarmMonitorDaemon/
+ExecStart=/usr/local/bin/python3.6 /home/volumio/FarmMonitorDaemon/src/main.py
 
 [Install]
 WantedBy=multi-user.target
