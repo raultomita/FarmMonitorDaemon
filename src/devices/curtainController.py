@@ -26,7 +26,7 @@ class CurtainController(baseThing.Thing):
 
     def handleCommand(self, command):        
         self.handleExecuteCommand(command)
-        self.handleTimerCommand(command)        
+        #self.handleTimerCommand(command)        
         self.handleInProgressCommand(command)
 
     def initialize(self):       
