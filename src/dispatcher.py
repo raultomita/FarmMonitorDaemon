@@ -115,10 +115,7 @@ class DispatcherThread(threading.Thread):
         heartbeat = Hearbeat()
         heartbeat.setId("heartbeat")
         self.devices.append(heartbeat)
-
-        curtainController = CurtainController()
-        curtainController.setId("cc1")
-        self.devices.append(curtainController)
+       
         if dataManager.hostName == "watcher":
             stateMan = StateManager()
             stateMan.setId("stateManager")            

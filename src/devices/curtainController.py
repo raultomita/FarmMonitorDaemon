@@ -19,14 +19,14 @@ class CurtainController(baseThing.Thing):
         self.currentDistance = 0       
         self.stamp = str(uuid.uuid4())
 
-        self.speedController = PWMOutputDevice(12)
-        self.directionController = OutputDevice(26)
+        self.speedController = PWMOutputDevice(24)
+        self.directionController = OutputDevice(0)
         self.distanceSensor = VL53L1X.VL53L1X(i2c_bus=1, i2c_address=0x29)
         self.distanceSensor.open()
 
     def handleCommand(self, command):        
         self.handleExecuteCommand(command)
-        #self.handleTimerCommand(command)        
+        self.handleTimerCommand(command)        
         self.handleInProgressCommand(command)
 
     def initialize(self):       
@@ -44,10 +44,10 @@ class CurtainController(baseThing.Thing):
             self.readDistance()
             moveDetected = abs(previousDistance - self.currentDistance) > 30
             
-            if moveDetected and previousDistance > self.currentDistance:
-                 dispatcher.enqueueCommand("%s:100" % self.id)
-            elif moveDetected and previousDistance < self.currentDistance:
-                 dispatcher.enqueueCommand("%s:0" % self.id)
+            # if moveDetected and previousDistance > self.currentDistance:
+            #      dispatcher.enqueueCommand("%s:100" % self.id)
+            # elif moveDetected and previousDistance < self.currentDistance:
+            #      dispatcher.enqueueCommand("%s:0" % self.id)
     
     def handleExecuteCommand(self, command):
         result = self.matcher.fullmatch(command)
@@ -71,12 +71,13 @@ class CurtainController(baseThing.Thing):
             self.speedController.value = 0
             self.readDistance() 
             self.stamp = str(uuid.uuid4())
+            logger.info("curtain stop") 
             
         elif command == "%s:%s-close" % (self.id, self.stamp):
             self.directionController.on()
             self.speedController.value = 1
             self.readDistance()
-
+            logger.info("curtain started") 
             if self.currentDistance > self.destination:            
                 self.speedController.value = 0
                 self.readDistance()
@@ -87,7 +88,7 @@ class CurtainController(baseThing.Thing):
             self.directionController.off()
             self.speedController.value = 1
             self.readDistance()
-
+            logger.info("curtain started")
             if self.currentDistance < self.destination:            
                 self.speedController.value = 0
                 self.readDistance() 
