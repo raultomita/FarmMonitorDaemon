@@ -11,7 +11,6 @@ from devices.led import Led
 from devices.stateManager import StateManager
 from devices.automaticTrigger import AutomaticTrigger
 from devices.distanceSensor import DistanceSensor
-from devices.curtainController import CurtainController
 from devices.heartbeat import *
 
 logger = logging.getLogger(__name__)
