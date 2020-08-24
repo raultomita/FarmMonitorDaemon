@@ -72,6 +72,7 @@ class DispatcherThread(threading.Thread):
             newDevice.setLocation(rawDevice["location"])
             newDevice.setDisplay(rawDevice["display"])
             newDevice.setGpio(int(rawDevice["gpio"]))
+            newDevice.setGoogleType(rawDevice["googleType"])
 
         elif rawDevice["type"] == "toggleButton":           
             newDevice = ToggleButton()            

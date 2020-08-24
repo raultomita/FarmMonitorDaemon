@@ -7,7 +7,7 @@ from gpiozero import OutputDevice
 
 logger = logging.getLogger(__name__)
 
-switchNotification = '{ "id": "%s", "type": "switch", "display":"%s", "location":"%s", "timeStamp": "%s", "state": "%d" }'
+switchNotification = '{ "id": "%s", "type": "switch", "display":"%s", "location":"%s", "timeStamp": "%s", "state": "%d", "googleType": "%s" }'
 
 class Switch(baseThing.Thing):
     def setLocation(self, location):
@@ -18,6 +18,9 @@ class Switch(baseThing.Thing):
 
     def setGpio(self, gpio):
         self.output = OutputDevice(gpio)
+
+    def setGoogleType(self, googleType):
+        self.googleType = googleType
 
     def handleCommand(self, command):
         if command == self.id:
@@ -38,6 +41,6 @@ class Switch(baseThing.Thing):
     
     def sendState(self):        
         dispatcher.sendCommand("%s:%d" % (self.id, int(self.output.value)))
-        notification = switchNotification % (self.id, self.display, self.location, datetime.now().isoformat(), int(self.output.value))
+        notification = switchNotification % (self.id, self.display, self.location, datetime.now().isoformat(), int(self.output.value), self.googleType)
         dataManager.enqueueGeneral('HSET', 'devices', self.id, notification)
         dataManager.enqueueNotification(notification)        
