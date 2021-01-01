@@ -11,88 +11,104 @@ MAX_DISTANCE = 3200
 MIN_DISTANCE = 300
 DOORDISTANCE = 2000
 
+OPENED = 1
+BEFORE_MIDDLE = 2
+AFTER_MIDDLE = 3
+BLOCKED = 4
+CLOSED = 5
+
+NONE = 0
+
+OPENING = 1
+CLOSING = 2
+
 logger = logging.getLogger(__name__)
 
-class Curtain(baseThing.Thing):
+class CurtainController(baseThing.Thing):
     def __init__(self):
-        self.matcher = re.compile("(curtain[0-9]*):([0-9]{1,3})")
-        self.currentDistance = 0       
-        self.stamp = str(uuid.uuid4())
+        self.matcher = re.compile("(curtain[0-9]*):([0-9]{1,3})")       
+        self.engine = CurtainEngine()        
+        self.curtain = Curtain()
 
-        self.speedController = PWMOutputDevice(24)
-        self.directionController = OutputDevice(0)
-        self.distanceSensor = VL53L1X.VL53L1X(i2c_bus=1, i2c_address=0x29)
-        self.distanceSensor.open()
+        self.state = NONE
 
-    def handleCommand(self, command):        
-        self.handleExecuteCommand(command)
-        self.handleTimerCommand(command)        
-        self.handleInProgressCommand(command)
+    def handleCommand(self, command):
+        if command == "timer":
+            self.handleTimerCommand()
+        elif command == "%s:open" % self.id:
+             self.handleOpenComamnd()
+        elif command == "%s:close" % self.id:
+            self.handleCloseComamnd()
+        elif command == "%s:stop" % self.id:
+            logger.debug("curtain stopped %s" % self.id)
+            self.engine.stop()
+            self.state = self.curtain.state()
 
-    def initialize(self):       
-       self.readDistance()
+    def initialize(self):  
+        # testare cand se ia curentul, sau crapa serviciul     
+        self.state = self.curtain.state()
 
-    def readDistance(self):
-        self.distanceSensor.start_ranging(3) #1 short 120 cm, 2 medium 200 cm, 3 large 400 cm 
-        self.currentDistance = self.distanceSensor.get_distance()
-        self.distanceSensor.stop_ranging()
-        logger.info("distance for %s is %s" % (self.id, self.currentDistance)) 
-    
-    def handleTimerCommand(self, command):
-        if command == "timer" and self.speedController.value == 0:   
-            previousDistance = self.currentDistance
-            self.readDistance()
-            moveDetected = abs(previousDistance - self.currentDistance) > 30
-            
-            # if moveDetected and previousDistance > self.currentDistance:
-            #      dispatcher.enqueueCommand("%s:100" % self.id)
-            # elif moveDetected and previousDistance < self.currentDistance:
-            #      dispatcher.enqueueCommand("%s:0" % self.id)
-    
-    def handleExecuteCommand(self, command):
-        result = self.matcher.fullmatch(command)
-        if result != None and result.group(1) == self.id:            
-            self.readDistance()
-            percent = int(result.group(2))
-            if percent > 100:
-                percent = 100
-            elif percent < 0:
-                percent = 0
-
-            self.destination = MAX_DISTANCE * percent/100 
-            self.stamp = str(uuid.uuid4())
-            if self.destination > self.currentDistance:                
-                dispatcher.enqueueCommand("%s:%s-close" % (self.id, self.stamp))            
-            else:
-                dispatcher.enqueueCommand("%s:%s-open" % (self.id, self.stamp))
-    
-    def handleInProgressCommand(self, command):
-        if command == "%s:stop" % self.id:
-            self.speedController.value = 0
-            self.readDistance() 
-            self.stamp = str(uuid.uuid4())
-            logger.info("curtain stop") 
-            
-        elif command == "%s:%s-close" % (self.id, self.stamp):
-            self.directionController.on()
-            self.speedController.value = 1
-            self.readDistance()
-            logger.info("curtain started") 
-            if self.currentDistance > self.destination:            
-                self.speedController.value = 0
-                self.readDistance()
-            else:
-                dispatcher.enqueueCommand(command)            
-
-        elif command == "%s:%s-open" % (self.id, self.stamp):
-            self.directionController.off()
-            self.speedController.value = 1
-            self.readDistance()
-            logger.info("curtain started")
-            if self.currentDistance < self.destination:            
-                self.speedController.value = 0
-                self.readDistance() 
-            else:
-                dispatcher.enqueueCommand(command)        
+    def handleTimerCommand(self):        
+        if self.engine.isRunning() and self.curtain.state() != self.state:
+            self.engine.stop()
+            self.state = self.curtain.state()
         
+    def handleOpenrCommand(self):
+        logger.debug("curtain opening %s" % self.id)
+    def handleOpenrCommand(self):
+        logger.debug("curtain closing %s" % self.id)
+
+class CurtainEngine()
+    def __init__(self):
+        self.speed = PWMOutputDevice(18)
+        self.direction = OutputDevice(17)
+        self.speed.value = 0
     
+    def open(self):
+        self.direction.off()
+        self.speed.value= 0.2
+    
+    def close(self):
+        self.direction.on()
+        self.speed.value= 0.2
+    
+    def stop(self):
+        self.speed.value= 0
+
+    def state(self):
+        if self.speed.value > 0 and self.direction.value == 1:
+            return CLOSING
+        elif self.speed.value > 0 and self.direction.value == 0:
+            return OPENING
+        
+        return NONE
+    def isRunning(self):
+        return self.speed.value > 0
+
+class Curtain()
+     def __init__(self):
+        self.middle = VL53L1X.VL53L1X(i2c_bus=1, i2c_address=0x29)
+        self.middle.open()
+
+    def state(self):
+        self.middle.start_ranging(1) #1 short 120 cm, 2 medium 200 cm, 3 large 400 cm 
+        middleDistance = self.middle.get_distance()
+        self.middle.stop_ranging()
+        doorDistance = 0
+        rightSensorDistance = 900
+        leftSensorDistance = 250
+
+        if rightSensorDistance > 400:
+            return OPENED
+        elif middleDistance >= 400:
+            return BEFORE_MIDDLE
+        elif leftSensorDistance < 400 and doorDistance < 10:
+            return CLOSED
+        elif leftSensorDistance < 400 and doorDistance >= 10:
+            return BLOCKED
+        elif middleDistance < 400 and doorDistance < 10:
+            return AFTER_MIDDLE
+        elif middleDistance < 400 and doorDistance >= 10:
+            return BLOCKED
+        
+        return NONE
