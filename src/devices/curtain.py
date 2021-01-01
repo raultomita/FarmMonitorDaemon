@@ -13,9 +13,9 @@ DOORDISTANCE = 2000
 
 logger = logging.getLogger(__name__)
 
-class CurtainController(baseThing.Thing):
+class Curtain(baseThing.Thing):
     def __init__(self):
-        self.matcher = re.compile("(cc[0-9]*):([0-9]{1,3})")
+        self.matcher = re.compile("(curtain[0-9]*):([0-9]{1,3})")
         self.currentDistance = 0       
         self.stamp = str(uuid.uuid4())
 
@@ -33,7 +33,7 @@ class CurtainController(baseThing.Thing):
        self.readDistance()
 
     def readDistance(self):
-        self.distanceSensor.start_ranging(3)  
+        self.distanceSensor.start_ranging(3) #1 short 120 cm, 2 medium 200 cm, 3 large 400 cm 
         self.currentDistance = self.distanceSensor.get_distance()
         self.distanceSensor.stop_ranging()
         logger.info("distance for %s is %s" % (self.id, self.currentDistance)) 
