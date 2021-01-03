@@ -45,26 +45,38 @@ class CurtainEngine():
         if self.speed.value > 0 and self.direction.value == 1:
             return CLOSING
         elif self.speed.value > 0 and self.direction.value == 0:
-            return OPENING
-        
+            return OPENING        
         return NONE
+
     def isRunning(self):
         return self.speed.value > 0
 
-class Curtain():
-    def __init__(self):
-        self.middleXSHUT = OutputDevice(25)
-        self.middleXSHUT.off()
+class CurtainSensor():
+    def __init__(self, address):        
+        self.sensor = VL53L1X.VL53L1X(i2c_bus=1, i2c_address=0x29) 
+        self.sensor.open()   
+        self.sensor.change_address(new_address = address)
+        self.sensor.open()        
 
-        self.middle = VL53L1X.VL53L1X(i2c_bus=1, i2c_address=0x29)
-        self.middle.open()        
+    def getDistance(self):
+        self.sensor.start_ranging(1) #1 short 120 cm, 2 medium 200 cm, 3 large 400 cm 
+        distance = self.sensor.get_distance()
+        self.sensor.stop_ranging()  
+
+        return distance
+        
+class Curtain():
+    def __init__(self):   
+        self.middle = CurtainSensor(address=0x20)          
+        #self.right = CurtainSensor(address=0x21)       
+        #self.left = CurtainSensor(address=0x22)       
+
         self.doorSensor = LineSensor(4)
 
-    def state(self):
-        self.middle.start_ranging(1) #1 short 120 cm, 2 medium 200 cm, 3 large 400 cm 
-        middleDistance = self.middle.get_distance()
-        self.middle.stop_ranging()       
+    def state(self):       
+        middleDistance = self.middle.getDistance()        
         rightDistance =1234    
+        leftDistance = 5
         logger.info("Curtain right is %f and middle %f and door %f", rightDistance, middleDistance, self.doorSensor.value)
 
 
