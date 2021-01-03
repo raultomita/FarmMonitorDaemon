@@ -89,26 +89,27 @@ class Curtain()
      def __init__(self):
         self.middle = VL53L1X.VL53L1X(i2c_bus=1, i2c_address=0x29)
         self.middle.open()
+        self.rightSensor = DistanceSensor(echo=23, trigger=24)
+        self.doorSensor = LineSensor(4)
+        self.leftSensor = LineSensor(25)
 
     def state(self):
         self.middle.start_ranging(1) #1 short 120 cm, 2 medium 200 cm, 3 large 400 cm 
         middleDistance = self.middle.get_distance()
-        self.middle.stop_ranging()
-        doorDistance = 0
-        rightSensorDistance = 900
-        leftSensorDistance = 250
+        self.middle.stop_ranging()       
+        rightSensorDistance = rightSensor.value        
 
         if rightSensorDistance > 400:
             return OPENED
         elif middleDistance >= 400:
             return BEFORE_MIDDLE
-        elif leftSensorDistance < 400 and doorDistance < 10:
-            return CLOSED
-        elif leftSensorDistance < 400 and doorDistance >= 10:
-            return BLOCKED
-        elif middleDistance < 400 and doorDistance < 10:
+        # elif leftSensorDistance < 400 and doorSensor.value == 1:
+        #     return CLOSED
+        # elif leftSensorDistance < 400 and doorSensor.value != 1:
+        #     return BLOCKED
+        elif middleDistance < 400 and doorSensor.value == 1:
             return AFTER_MIDDLE
-        elif middleDistance < 400 and doorDistance >= 10:
+        elif middleDistance < 400 and doorSensor.value >= 1:
             return BLOCKED
         
         return NONE
