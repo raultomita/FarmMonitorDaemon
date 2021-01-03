@@ -53,19 +53,18 @@ class CurtainEngine():
 
 class Curtain():
     def __init__(self):
+        self.middleXSHUT = OutputDevice(25)
+        self.middleXSHUT.off()
+
         self.middle = VL53L1X.VL53L1X(i2c_bus=1, i2c_address=0x29)
-        self.middle.open()
-        self.rightSensor = DistanceSensor(echo=23, trigger=24, partial=True, max_distance=0.6, threshold_distance=0.1)
-        self.rightSensor.when_in_range = lambda: logger.info("right is in range %f ", self.rightSensor.distance * 100)
-        self.rightSensor.when_out_of_range = lambda: logger.info("right is out of range %f ", self.rightSensor.distance * 100)
+        self.middle.open()        
         self.doorSensor = LineSensor(4)
-        self.leftSensor = LineSensor(25)
 
     def state(self):
         self.middle.start_ranging(1) #1 short 120 cm, 2 medium 200 cm, 3 large 400 cm 
         middleDistance = self.middle.get_distance()
         self.middle.stop_ranging()       
-        rightDistance = self.rightSensor.distance * 100    
+        rightDistance =1234    
         logger.info("Curtain right is %f and middle %f and door %f", rightDistance, middleDistance, self.doorSensor.value)
 
 
