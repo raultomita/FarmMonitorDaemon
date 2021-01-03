@@ -12,6 +12,7 @@ from devices.stateManager import StateManager
 from devices.automaticTrigger import AutomaticTrigger
 from devices.distanceSensor import DistanceSensor
 from devices.heartbeat import *
+from devices.curtain import *
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +55,8 @@ class DispatcherThread(threading.Thread):
     def addDevices(self):
         if path.exists("devices.json"):
             configFile = open("devices.json","r")        
-            devices = json.loads(configFile.read())            
+            devices = json.loads(configFile.read())        
+            
             for device in devices:
                 self.addDevice(device)
                     
@@ -113,9 +115,12 @@ class DispatcherThread(threading.Thread):
 
     def addSystemDevices(self):
         heartbeat = Hearbeat()
-        heartbeat.setId("heartbeat")
+        heartbeat.setId("heartbeat")        
         self.devices.append(heartbeat)
-       
+        # curtainController = CurtainController()
+        # curtainController.setId("curtain")    
+        # self.devices.append(curtainController)
+
         if dataManager.hostName == "watcher":
             stateMan = StateManager()
             stateMan.setId("stateManager")            
