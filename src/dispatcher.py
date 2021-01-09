@@ -130,7 +130,7 @@ class DispatcherThread(threading.Thread):
             heartbeatMon.setId("heartbeatMonitor")
             self.devices.append(heartbeatMon)
 
-            logger.debug("Due to being a master node, stateManager and and heartbeetMonitor are added.")
+            logger.debug("Due to being a master node, stateManager and and heartbeatMonitor are added.")
 
     def initializeSystem(self):
         logger.debug("Start initialization")
