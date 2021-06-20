@@ -4,8 +4,8 @@ After=multi-user.target
 
 [Service]
 Type=idle
-WorkingDirectory=/home/volumio/FarmMonitorDaemon/
-ExecStart=/usr/local/bin/python3.6 /home/volumio/FarmMonitorDaemon/src/main.py
+WorkingDirectory=/home/pi/FarmMonitorDaemon/
+ExecStart=python3 /home/pi/FarmMonitorDaemon/src/main.py
 
 [Install]
 WantedBy=multi-user.target

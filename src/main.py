@@ -1,16 +1,17 @@
-import dataManager
-import dispatcher
-#import remote
-import threading
-import time
 import logging
-import sys
-import re
 
 logLevel = logging.WARNING
 logger = logging.getLogger(__name__)
 
-#sys.argv hods the command line args of pyhton exe. First arg is the script name itself.
+import dataManager
+import dispatcher
+import threading
+import time
+
+import sys
+import re
+
+#sys.argv holds the command line args of pyhton exe. First arg is the script name itself.
 
 if len(sys.argv) >= 2 and re.fullmatch("^[0-9]{1,3}(\.[0-9]{1,3}){3}$", sys.argv[1]) != None:
     dataManager.redisIP = sys.argv[1]
@@ -35,11 +36,15 @@ redisThread.start()
 dispatcherThread = dispatcher.DispatcherThread()
 dispatcherThread.start()
 
-#remoteControlThread = remote.RemoteControlThread()
-#remoteControlThread.start()
+try:
+    import remote
+    remoteControlThread = remote.RemoteControlThread()
+    remoteControlThread.start()    
+except ImportError as error:
+    logger.warning("Remote cannot be loaded due to: %s" % error) 
 
 while True:
-    logger.debug(time.clock())
+    logger.debug(time.process_time())
     logger.debug("Active threads %d with redis queue size %d and dispatcher queue size %d" % (threading.active_count(), dataManager.commands.qsize(), dispatcher.receivedCommandsQueue.qsize()))
     time.sleep(1)
     dispatcher.enqueueCommand("timer")

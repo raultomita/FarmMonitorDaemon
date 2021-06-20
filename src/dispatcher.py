@@ -5,6 +5,8 @@ import logging
 import json
 from os import path
 
+logger = logging.getLogger(__name__)
+
 from devices.switch import Switch
 from devices.toggleButton import ToggleButton
 from devices.led import Led
@@ -12,9 +14,10 @@ from devices.stateManager import StateManager
 from devices.automaticTrigger import AutomaticTrigger
 from devices.distanceSensor import DistanceSensor
 from devices.heartbeat import *
-from devices.curtain import *
-
-logger = logging.getLogger(__name__)
+try:
+    from devices.curtain import *    
+except ImportError as error:
+    logger.warning("Curtain cannot be loaded due to: %s" % error)   
 
 receivedCommandsQueue = queue.Queue()
 
@@ -116,10 +119,7 @@ class DispatcherThread(threading.Thread):
     def addSystemDevices(self):
         heartbeat = Hearbeat()
         heartbeat.setId("heartbeat")        
-        self.devices.append(heartbeat)
-        curtainController = CurtainController()
-        curtainController.setId("curtain")    
-        self.devices.append(curtainController)
+        self.devices.append(heartbeat)        
 
         if dataManager.hostName == "watcher":
             stateMan = StateManager()
