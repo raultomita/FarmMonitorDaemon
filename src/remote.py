@@ -19,8 +19,8 @@ class RemoteControlThread(threading.Thread):
            
            if event.type == ecodes.EV_KEY:
                rcEvent = categorize(event)
-             
                if rcEvent.keystate == rcEvent.key_down:
+                   print(rcEvent)
                    if rcEvent.keycode == "KEY_RED":
                        dispatcher.enqueueCommand("switch23")
                    elif rcEvent.keycode == "KEY_PREVIOUS":
@@ -38,6 +38,7 @@ class RemoteControlThread(threading.Thread):
                        dispatcher.sendCommand("switch22:off")
                        dispatcher.sendCommand("switch20:off")
                        dispatcher.sendCommand("switch21:off")
+                       dispatcher.enqueueCommand("switch24:on")
                    elif rcEvent.keycode == "KEY_STOP":
                        dispatcher.sendCommand("switch6:off")
                        dispatcher.sendCommand("switch8:off")
@@ -49,3 +50,6 @@ class RemoteControlThread(threading.Thread):
                        dispatcher.sendCommand("switch22:off")
                        dispatcher.sendCommand("switch21:off")
                        dispatcher.sendCommand("switch20:off")
+                       dispatcher.enqueueCommand("switch24:off")
+                   elif rcEvent.keycode == "KEY_PAUSE":
+                       dispatcher.enqueueCommand("switch24")
