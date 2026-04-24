@@ -12,6 +12,7 @@ from devices.toggleButton import ToggleButton
 from devices.led import Led
 from devices.stateManager import StateManager
 from devices.automaticTrigger import AutomaticTrigger
+from devices.scheduledTrigger import ScheduledTrigger
 from devices.distanceSensor import DistanceSensor
 from devices.heartbeat import *
 try:
@@ -78,6 +79,8 @@ class DispatcherThread(threading.Thread):
             newDevice.setDisplay(rawDevice["display"])
             newDevice.setGpio(int(rawDevice["gpio"]))
             newDevice.setGoogleType(rawDevice["googleType"])
+            if "autoOff" in rawDevice:
+                newDevice.setAutoOff(int(rawDevice["autoOff"]))
 
         elif rawDevice["type"] == "toggleButton":           
             newDevice = ToggleButton()            
@@ -103,6 +106,13 @@ class DispatcherThread(threading.Thread):
             newDevice = AutomaticTrigger()
             newDevice.setTargetDeviceId(rawDevice["targetDeviceId"])  
             newDevice.setListenOn(rawDevice["listenOnDeviceId"])  
+
+        elif rawDevice["type"] == "scheduledTrigger":
+            newDevice = ScheduledTrigger()
+            newDevice.setTargetDeviceId(rawDevice["targetDeviceId"])
+            newDevice.setCron(rawDevice["cron"])
+            if "durationSeconds" in rawDevice:
+                newDevice.setDuration(int(rawDevice["durationSeconds"]))
 
         elif rawDevice["type"] == "distanceSensor":
             newDevice = DistanceSensor()
