@@ -3,3 +3,5 @@ src/__pycache__
 src/devices/__pycache__
 devices.json
 switchLocations.json
+bin/
+obj/
