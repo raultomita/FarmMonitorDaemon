@@ -70,5 +70,6 @@ class Switch(baseThing.Thing):
     def sendState(self):        
         dispatcher.sendCommand("%s:%d" % (self.id, int(self.output.value)))
         notification = switchNotification % (self.id, self.display, self.location, datetime.now().isoformat(), int(self.output.value), self.googleType)
+        dataManager.device_state_times[self.id] = datetime.now()
         dataManager.enqueueGeneral('HSET', 'devices', self.id, notification)
-        dataManager.enqueueNotification(notification)        
+        dataManager.enqueueNotification(notification)

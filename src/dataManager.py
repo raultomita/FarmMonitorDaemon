@@ -75,8 +75,20 @@ def retrieveAllSwitchLocations(redis):
 
 commands = queue.Queue()
 
+# Tracks the last time each device changed state (used for stale cloud-command filtering)
+device_state_times = {}
+
+def enqueueCloudEvent(event_type, payload):
+    """Forward an event to the cloud module (if loaded). Non-blocking."""
+    try:
+        import cloud
+        cloud.enqueueCloudEvent(event_type, payload)
+    except ImportError:
+        pass
+
 def enqueueNotification(notification):
     enqueueGeneral("PUBLISH", "notifications", notification)
+    enqueueCloudEvent("state", notification)
 
 def enqueueCommand(command):
     enqueueGeneral("PUBLISH", "commands", command)

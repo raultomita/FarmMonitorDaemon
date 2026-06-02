@@ -43,6 +43,13 @@ try:
 except ImportError as error:
     logger.warning("Remote cannot be loaded due to: %s" % error) 
 
+try:
+    import cloud
+    cloudThread = cloud.CloudManagerThread()
+    cloudThread.start()
+except ImportError as error:
+    logger.warning("Cloud module cannot be loaded due to: %s" % error)
+
 while True:
     logger.debug(time.process_time())
     logger.debug("Active threads %d with redis queue size %d and dispatcher queue size %d" % (threading.active_count(), dataManager.commands.qsize(), dispatcher.receivedCommandsQueue.qsize()))

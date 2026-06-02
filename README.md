@@ -47,3 +47,83 @@ sudo reboot
 - [Web] Implentare controale (TankLevel)
 - [Web] Autoconnect webSocket
 - [Deploy] Docker pentru Redis
+
+## Azure Cosmos DB Cloud Integration
+
+The daemon can optionally report device states and heartbeats to Azure Cosmos DB, and retrieve commands from the cloud.
+
+### Prerequisites
+
+Install the `requests` library:
+
+```bash
+pip install requests
+```
+
+### Environment Variables
+
+Set the following environment variables before starting the daemon (or add them to the systemd unit file via `Environment=`):
+
+| Variable | Description | Example |
+|---|---|---|
+| `COSMOS_ENDPOINT` | Cosmos DB account endpoint URL | `https://myaccount.documents.azure.com:443/` |
+| `COSMOS_KEY` | Primary or secondary account key (base64) | `abc123==` |
+| `COSMOS_DATABASE` | Database name | `farmmonitor` |
+
+If these variables are not set, the cloud sync thread starts but immediately exits — the daemon works normally without cloud connectivity.
+
+### Cosmos DB Container Schemas
+
+Create the following containers in the `farmmonitor` database:
+
+#### `device-states` (partition key: `/hostname`)
+Upserted on every switch state change.
+```json
+{
+  "id": "home1_switch3",
+  "hostname": "home1",
+  "type": "switch",
+  "display": "Light 1",
+  "location": "living",
+  "timeStamp": "2026-05-31T20:00:00.000",
+  "state": 1,
+  "googleType": "LIGHT"
+}
+```
+
+#### `heartbeats` (partition key: `/hostname`)
+Upserted each time the node's heartbeat is confirmed.
+```json
+{
+  "id": "home1",
+  "hostname": "home1",
+  "lastSeen": "31.05.26 20:00:00"
+}
+```
+
+#### `commands` (partition key: `/targetHost`)
+Written by an external app; the daemon polls every 30 s, dispatches pending commands, then marks them processed.
+```json
+{
+  "id": "unique-command-uuid",
+  "targetHost": "home1",
+  "command": "switch3:on",
+  "timestamp": "2026-05-31T20:00:00Z",
+  "status": "pending"
+}
+```
+Commands whose `timestamp` is older than the device's last known state change are **silently skipped** (marked `"processed"`) to avoid replaying outdated instructions.
+
+### Systemd Service with Cosmos DB Variables
+
+Add `Environment=` lines to `/lib/systemd/system/farmMonitor.service`:
+
+```ini
+[Service]
+Type=idle
+Environment="COSMOS_ENDPOINT=https://myaccount.documents.azure.com:443/"
+Environment="COSMOS_KEY=<your-key>"
+Environment="COSMOS_DATABASE=farmmonitor"
+ExecStart=/usr/bin/python /home/pi/src/main.py 192.168.1.x
+```
+

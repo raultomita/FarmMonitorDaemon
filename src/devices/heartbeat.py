@@ -23,7 +23,9 @@ class HeartbeatMonitor(baseThing.Thing):
         if result != None :
             logger.debug("heartbeat matched")
             hostname = result.group(1)
-            dataManager.enqueueGeneral('HSET', 'heartbeat', hostname, datetime.now().strftime("%d.%m.%y %H:%M:%S"))
+            last_seen = datetime.now().strftime("%d.%m.%y %H:%M:%S")
+            dataManager.enqueueGeneral('HSET', 'heartbeat', hostname, last_seen)
+            dataManager.enqueueCloudEvent("heartbeat", last_seen)
 
         elif command == "timer" and (datetime.now() - self.sentAt).total_seconds() > 420:
             self.sentAt = datetime.now()            
